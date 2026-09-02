@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.6
+
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        libsndfile1 \
+        ffmpeg \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY voice-agent/requirements.txt .
+COPY shared/ /shared/
+
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv "$VIRTUAL_ENV" && \
+    "$VIRTUAL_ENV"/bin/pip install --upgrade pip && \
+    "$VIRTUAL_ENV"/bin/pip install /shared && \
+    "$VIRTUAL_ENV"/bin/pip install -r requirements.txt
+
+# Pipecat sentence aggregation needs this data even when startup is healthy.
+# Bake it in so the runtime does not need to download it on its first call.
+RUN python -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/local/share/nltk_data', raise_on_error=True)"
+
+COPY voice-agent/ .
+
+ENV PORT=7860
+EXPOSE 7860
+
+CMD ["sh", "-c", "uvicorn bot:app --host 0.0.0.0 --port ${PORT:-7860}"]

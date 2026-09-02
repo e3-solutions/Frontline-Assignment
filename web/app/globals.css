@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "@e3-solutions/ui/globals.css";
+@source "../node_modules/@e3-solutions/ui/dist";
+
+@theme inline {
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+   --font-sans: var(--font-geist-sans);
+   --font-mono: var(--font-geist-mono);
+}
+
+:root {
+   --background: var(--e3-bg-app);
+   --foreground: var(--e3-text-strong);
+}
+
+body {
+   background: var(--background);
+   color: var(--foreground);
+   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ── Icon Action (app-specific) ── */
+.e3-icon-action {
+   color: var(--e3-chip-rose-text);
+   font-family: var(--font-almarai), var(--font-geist-sans), sans-serif;
+   font-size: 0.875rem;
+   transition: color 0.2s ease;
+}
+
+.e3-icon-action:hover {
+   color: var(--e3-text-strong);
+}

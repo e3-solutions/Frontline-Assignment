@@ -1,0 +1,41 @@
+line-length = 88
+fix = true
+show-fixes = true
+
+[lint]
+# Essential auto-fixable rules only
+select = [
+    "F",    # Pyflakes (unused imports, undefined vars)
+    "E",    # pycodestyle errors (spacing, indentation)
+    "W",    # pycodestyle warnings
+    "UP",   # pyupgrade (modernize syntax - f-strings, type hints)
+    "C4",   # flake8-comprehensions (better list/dict comprehensions)
+    "B",    # flake8-bugbear (common Python gotchas)
+    "SIM",  # flake8-simplify (simplify code patterns)
+    "COM",  # flake8-commas (trailing commas for better diffs)
+    "Q",    # flake8-quotes (enforce double quotes)
+    "RET",  # flake8-return (simplify return statements)
+    "ERA",  # eradicate (remove commented code)
+    "RUF",  # Ruff-specific improvements
+]
+
+# Only ignore formatter conflicts
+ignore = [
+    "E501",   # Line too long (formatter handles)
+    "COM812", # Missing trailing comma (formatter handles)
+    "COM819", # Prohibited trailing comma (formatter handles)
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false  # Forces dictionary line breaks
+
+[lint.isort]
+combine-as-imports = true
+split-on-trailing-comma = true
+known-first-party = ["voice_freight_broker"]
+lines-after-imports = 2
+
+[lint.flake8-quotes]
+inline-quotes = "double"

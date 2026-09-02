@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# ngrok (contains authtoken)
+ngrok.yml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+
+# Node
+node_modules/
+.next/
+
+# ide files
+.idea/
+
+remote_schema.sql
+remote_data.sql
+# Local client session artifact
+voice-agent/:memory:.ses

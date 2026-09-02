@@ -1,0 +1,25 @@
+# Voice images use the repository root as their build context.
+**/.git
+**/.github
+**/.env
+**/.env.*
+**/env/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.py[cod]
+**/*.log
+**/:memory:.ses
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/
+**/.next/
+**/build/
+**/dist/
+web/
+supabase/
+docs/
+ngrok.yml
+remote_schema.sql
+remote_data.sql

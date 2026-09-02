@@ -1,0 +1,11 @@
+{
+	"python.defaultInterpreterPath": "${workspaceFolder}/voice-agent/venv/bin/python",
+	"python.analysis.extraPaths": ["${workspaceFolder}/voice-agent"],
+	"[python]": {
+		"editor.formatOnSave": true,
+		"editor.defaultFormatter": "charliermarsh.ruff",
+		"editor.codeActionsOnSave": {
+			"source.fixAll": "explicit"
+		}
+	}
+}

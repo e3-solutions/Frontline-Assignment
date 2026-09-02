@@ -1,0 +1,14 @@
+.next
+node_modules
+.git
+.github
+.husky
+*.log
+Dockerfile*
+README.md
+coverage
+tmp
+.env
+.env.*
+dist
+
