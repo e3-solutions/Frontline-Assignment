@@ -84,17 +84,17 @@ def get_org_name_for_phone(bot_phone: str) -> str | None:
 
 def create_call_record(
     load_id: UUID | None = None,
-    daily_call_id: str | None = None,
     caller_number: str | None = None,
     caller_country_code: str | None = None,
     caller_mc: str | None = None,
     bot_phone: str | None = None,
+    provider_call_id: str | None = None,
+    telephony_provider: str = "livekit",
 ) -> CallRecordResult:
     """Create a new call record in the database.
 
     Args:
         load_id: UUID of the load being negotiated (optional, can be added later)
-        daily_call_id: Daily's call identifier (optional)
         caller_number: Phone number of the caller (optional)
         caller_country_code: Country code of the caller (optional)
         caller_mc: MC (Motor Carrier) number of the caller (optional)
@@ -113,12 +113,15 @@ def create_call_record(
 
         call_data = {
             "load_id": str(load_id) if load_id else None,
-            "daily_call_id": daily_call_id,
             "caller_number": caller_number,
             "caller_country_code": caller_country_code,
             "org_id": org_id,
             "result": {},
         }
+
+        if provider_call_id is not None:
+            call_data["provider_call_id"] = provider_call_id
+        call_data["telephony_provider"] = telephony_provider
 
         if caller_mc:
             call_data["caller_mc"] = caller_mc
@@ -130,7 +133,8 @@ def create_call_record(
 
         call_id = response.data[0]["id"]
         logger.info(
-            f"Created call record: {call_id} (Daily: {daily_call_id}, Org: {org_id})"
+            f"Created call record: {call_id} "
+            f"(Provider: {telephony_provider}/{provider_call_id}, Org: {org_id})"
         )
         return CallRecordResult(call_id=UUID(call_id), org_id=org_id)
 
@@ -247,9 +251,7 @@ def end_call_record(
         if universal_context is not None:
             update_data["universal_context"] = universal_context
         if universal_context_captured_at is not None:
-            update_data["universal_context_captured_at"] = (
-                universal_context_captured_at
-            )
+            update_data["universal_context_captured_at"] = universal_context_captured_at
 
         supabase.table("calls").update(update_data).eq("id", str(call_id)).execute()
 

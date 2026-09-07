@@ -15,11 +15,8 @@ from pipecat.pipeline.task import PipelineParams, PipelineTask
 from transfer_state import TransferState
 from transport_factory import TransportFactory
 from context_builder import Room2ContextBuilder
-from response_aware_sentence_aggregator import ResponseAwareSentenceAggregator
 from pipecat.services.deepgram.stt import DeepgramSTTService, LiveOptions
-from tts import Qwen3VoiceCloneService
 from pipecat.services.openai.llm import OpenAILLMService
-from pipecat.transcriptions.language import Language
 from pipecat.processors.transcript_processor import TranscriptProcessor
 from pipecat.processors.audio.audio_buffer_processor import AudioBufferProcessor
 from speech_sync import SpeechSyncProcessor
@@ -29,6 +26,7 @@ from pipecat.services.cartesia.tts import CartesiaTTSService
 
 
 room2_context = None
+
 
 class Room2PipelineService:
     """Builds and manages the Room2 pipeline lifecycle."""
@@ -49,7 +47,17 @@ class Room2PipelineService:
     def task(self):
         return self._task
 
-    async def start(self, stt, tts, llm, skip_tts_processor, transcript, speech_sync, audiobuffer, context_aggregator) -> asyncio.Task:
+    async def start(
+        self,
+        stt,
+        tts,
+        llm,
+        skip_tts_processor,
+        transcript,
+        speech_sync,
+        audiobuffer,
+        context_aggregator,
+    ) -> asyncio.Task:
         """Build and start the Room2 pipeline.
 
         Args:
@@ -75,12 +83,14 @@ class Room2PipelineService:
         stt
         context_aggregator
         """
-        # Create transport for Room2 (no dialin_settings — bot is joining directly)
+        # The bot receives a separate token for the broker room and joins it
+        # directly; the telephony service is responsible for bringing in the
+        # human participant.
         self._transport = TransportFactory.create(
-            room_url=self._state.room2_url,
+            url=self._state.room2_url,
             token=self._state.room2_token,
+            room_name=self._state.room2_name,
             bot_name="Negotiation Agent",
-            daily_dialin_settings=self._state.daily_dialin_settings,
         )
 
         # === Create FRESH STT ===
@@ -97,24 +107,7 @@ class Room2PipelineService:
             ),
         )
 
-        # === Create FRESH TTS ===
-        # tts = Qwen3VoiceCloneService(
-        #     websocket_url=os.getenv("QWEN3_TTS_WEBSOCKET_URL"),
-        #     params=Qwen3VoiceCloneService.InputParams(
-        #         language=Language.EN,
-        #         speaker="vivian",
-        #         chunk_size=37,
-        #         speed=1.2,
-        #         instruct=(
-        #             "Use a neutral american female accent. Speak with a warm, "
-        #             "conversational, friendly tone. Use natural, slight conversational "
-        #             "fillers like 'well' or 'you know', and ensure the pacing is relaxed, "
-        #             "like a podcast host. Your speech needs to be very clear and precise."
-        #         ),
-        #     ),
-        #     sample_rate=24000,
-        #     text_aggregator=ResponseAwareSentenceAggregator(),
-        # )
+        # Create a fresh synthesizer for the broker briefing room.
         CARTESIA_VOICE = "e07c00bc-4134-4eae-9ea4-1a55fb45746b"
         tts = CartesiaTTSService(
             api_key=os.environ["CARTESIA_API_KEY"],
@@ -159,23 +152,28 @@ class Room2PipelineService:
             context_aggregator=room2_context_aggregator,
         )
 
-        llm.register_function("transfer_human_to_carrier", transfer_handler.handle_transfer_human_to_carrier)
+        llm.register_function(
+            "transfer_human_to_carrier",
+            transfer_handler.handle_transfer_human_to_carrier,
+        )
 
         # Build pipeline
-        pipeline = Pipeline([
-            self._transport.input(),
-            stt,
-            transcript.user(),
-            room2_context_aggregator.user(),
-            llm,
-            skip_tts_processor,
-            tts,
-            speech_sync,
-            self._transport.output(),
-            audiobuffer,
-            transcript.assistant(),
-            room2_context_aggregator.assistant(),
-        ])
+        pipeline = Pipeline(
+            [
+                self._transport.input(),
+                stt,
+                transcript.user(),
+                room2_context_aggregator.user(),
+                llm,
+                skip_tts_processor,
+                tts,
+                speech_sync,
+                self._transport.output(),
+                audiobuffer,
+                transcript.assistant(),
+                room2_context_aggregator.assistant(),
+            ]
+        )
 
         self._task = PipelineTask(
             pipeline,
@@ -194,7 +192,10 @@ class Room2PipelineService:
         # Setup participant tracking for human joining Room2
         self._setup_room2_events()
 
-        logger.info(f"Starting Room2 pipeline at {self._state.room2_url}")
+        logger.info(
+            f"Starting Room2 pipeline in {self._state.room2_name} "
+            f"at {self._state.room2_url}"
+        )
         self._run_future = asyncio.create_task(self._runner.run(self._task))
 
         return self._run_future
@@ -202,60 +203,60 @@ class Room2PipelineService:
     def _setup_room2_events(self):
         """Register event handlers for Room2."""
 
-        @self._transport.event_handler("on_first_participant_joined")
-        async def on_first_participant_joined(transport, participant):
-            """Human broker joined Room2 — start the conversation."""
-            participant_id = participant["id"]
-            info = participant.get("info", {})
-            user_name = info.get("userName", "")
+        async def track_human(participant_id: str) -> None:
+            metadata = await self._transport.get_participant_metadata(participant_id)
+            identity = metadata.get("identity") or metadata.get("name")
 
-            room2_context.session_id = participant.get("id")
+            # Pipecat 0.0.95 exposes the participant SID through its public
+            # event, but its metadata helper omits the LiveKit identity.
+            client = getattr(self._transport, "_client", None)
+            try:
+                participant = client.room.remote_participants.get(participant_id)
+                identity = getattr(participant, "identity", None) or identity
+            except (AttributeError, RuntimeError):
+                pass
 
-            logger.info(f"[Room2] First participant joined: {participant_id} ({user_name})")
-
-            # Skip the bot itself
-            if user_name == "Negotiation Agent":
+            expected_id = self._state.human_participant_id
+            expected_identity = self._state.human_participant_identity
+            if expected_id and expected_id != participant_id:
+                logger.info(
+                    f"[Room2] Ignoring unexpected participant: {participant_id}"
+                )
+                return
+            if expected_identity and identity and expected_identity != identity:
+                logger.info(f"[Room2] Ignoring unexpected identity: {identity}")
                 return
 
-            # This is the human broker
+            logger.info(
+                f"[Room2] Participant connected: sid={participant_id} "
+                f"identity={identity}"
+            )
+
             self._state.human_participant_id = participant_id
-            logger.info(f"[Room2] Human broker identified: {participant_id}")
+            self._state.human_participant_identity = identity or expected_identity
+            room2_context.session_id = participant_id
+
+        @self._transport.event_handler("on_first_participant_joined")
+        async def on_first_participant_joined(transport, participant_id):
+            """Human broker joined Room2 — start the conversation."""
+            await track_human(participant_id)
 
             # Start the conversation — bot should brief the human
             # await self._task.queue_frames([LLMRunFrame()])
 
-        @self._transport.event_handler("on_participant_joined")
-        async def on_participant_joined(transport, participant):
+        @self._transport.event_handler("on_participant_connected")
+        async def on_participant_connected(transport, participant_id):
             """Track any participant joining Room2."""
-            participant_id = participant["id"]
-            info = participant.get("info", {})
-            user_name = info.get("userName", "")
+            await track_human(participant_id)
 
-            logger.info(f"[Room2] Participant joined: {participant_id} ({user_name})")
-            logger.debug(f"[Room2] Full participant info: {participant}")
-
-            if user_name == "Negotiation Agent":
+        @self._transport.event_handler("on_participant_disconnected")
+        async def on_participant_disconnected(transport, participant_id):
+            """End the broker pipeline when its telephony participant leaves."""
+            if participant_id != self._state.human_participant_id:
                 return
-
-            self._state.human_participant_id = participant_id
-
-        @self._transport.event_handler("on_dialout_connected")
-        async def on_dialout_connected(transport, data):
-            """Capture human's SIP session ID when dialout connects."""
-            logger.info(f"[Room2] Dialout connected: {data}")
-            session_id = data.get("sessionId")
-            if session_id:
-                self._state.human_session_id = session_id
-                logger.info(f"[Room2] Human SIP session ID: {session_id}")
-
-        @self._transport.event_handler("on_dialout_answered")
-        async def on_dialout_answered(transport, data):
-            """Capture session ID from dialout answered event."""
-            logger.info(f"[Room2] Dialout answered: {data}")
-            session_id = data.get("sessionId")
-            if session_id:
-                self._state.human_session_id = session_id
-                logger.info(f"[Room2] Human SIP session ID (from answered): {session_id}")
+            logger.info(f"[Room2] Human broker disconnected: {participant_id}")
+            if self._task:
+                await self._task.cancel()
 
     async def stop(self):
         """Stop the Room2 pipeline."""

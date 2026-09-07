@@ -1,5 +1,8 @@
 # Core Pipecat with all necessary extras (soundfile added for background audio mixing)
-pipecat-ai[daily,deepgram,cartesia,openai,silero,local-smart-turn-v3,runner,soundfile]==0.0.95
+pipecat-ai[livekit,deepgram,cartesia,openai,silero,local-smart-turn-v3,runner,soundfile]==0.0.95
+
+# LiveKit server API for room, webhook, SIP participant, and transfer operations
+livekit-api>=1,<2
 
 # Pipecat Cloud for production deployment
 pipecatcloud>=0.2.7

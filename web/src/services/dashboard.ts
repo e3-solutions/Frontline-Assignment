@@ -153,6 +153,8 @@ const mapCallRowToRecord = (call: {
   id: string;
   load_id?: string | null;
   daily_call_id?: string | null;
+  telephony_provider?: "daily" | "livekit" | null;
+  provider_call_id?: string | null;
   negotiation_result?: string | null;
   caller_number?: string | null;
   caller_country_code?: string | null;
@@ -177,6 +179,8 @@ const mapCallRowToRecord = (call: {
     // historical orphans (Salesforce-shaped IDs) display as-is.
     loadId: call.load_id || "N/A",
     dailyCallId: call.daily_call_id || "",
+    telephonyProvider: call.telephony_provider || "daily",
+    providerCallId: call.provider_call_id || call.daily_call_id || "",
     negotiationResult: call.negotiation_result || undefined,
     callerNumber: call.caller_number || "N/A",
     callerCountryCode: call.caller_country_code || "+1",

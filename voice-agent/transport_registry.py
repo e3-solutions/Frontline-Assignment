@@ -1,18 +1,14 @@
-"""Global transport registry.
+"""Global registry for the currently active LiveKit transport."""
 
-Single Responsibility: Store and retrieve the current DailyTransport instance.
-"""
+from pipecat.transports.livekit.transport import LiveKitTransport
 
-from pipecat.transports.daily.transport import DailyTransport
-from typing import Optional
-
-_transport: Optional[DailyTransport] = None
+_transport: LiveKitTransport | None = None
 
 
-def set_transport(t: DailyTransport):
+def set_transport(transport: LiveKitTransport) -> None:
     global _transport
-    _transport = t
+    _transport = transport
 
 
-def get_transport() -> Optional[DailyTransport]:
+def get_transport() -> LiveKitTransport | None:
     return _transport
