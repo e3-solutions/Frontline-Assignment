@@ -362,6 +362,7 @@ async def run_bot(
 
     task = PipelineTask(
         pipeline,
+        idle_timeout_secs=None,
         params=PipelineParams(
             enable_metrics=True,
             enable_usage_metrics=True,
@@ -381,6 +382,7 @@ async def run_bot(
         task=task,
         context=context,
         context_aggregator=context_aggregator,
+        transport=transport,
         call_id=request.provider_call_id,
     )
     _orchestrator.state.provider_call_id = request.provider_call_id
@@ -466,6 +468,18 @@ async def run_bot(
     _call_started = False
     _matched_participant_sid: str | None = None
     _departure_handled = False
+    _recording_started = False
+    _recording_stopped = False
+
+    async def _stop_recording_once() -> None:
+        nonlocal _recording_stopped
+        if not _recording_started or _recording_stopped:
+            return
+        _recording_stopped = True
+        try:
+            await audiobuffer.stop_recording()
+        except Exception as e:
+            logger.exception(f"Failed to stop recording: {e}")
 
     async def _participant_identity(participant_id: str) -> str | None:
         metadata = await transport.get_participant_metadata(participant_id)
@@ -489,7 +503,7 @@ async def run_bot(
         return True, identity
 
     async def _start_call(participant_id: str) -> None:
-        nonlocal _call_started, _matched_participant_sid
+        nonlocal _call_started, _matched_participant_sid, _recording_started
         if _call_started:
             return
 
@@ -518,6 +532,7 @@ async def run_bot(
         logger.info(f"Carrier tracked: sid={participant_id}, identity={identity}")
 
         await audiobuffer.start_recording()
+        _recording_started = True
 
         async def create_call_async():
             try:
@@ -536,6 +551,7 @@ async def run_bot(
                 )
                 if result:
                     context.call_id = result.call_id
+                    _orchestrator.call_id = str(result.call_id)
                     context.org_id = (
                         result.org_id
                     )  # Store org_id for multi-tenant isolation
@@ -561,6 +577,13 @@ async def run_bot(
     @transport.event_handler("on_participant_disconnected")
     async def on_participant_disconnected(transport, participant_id):
         nonlocal _departure_handled
+        if (
+            _orchestrator.state.phase.value
+            in {"handoff_requested", "handoff_complete"}
+            and participant_id == _orchestrator.state.human_participant_id
+        ):
+            await _orchestrator.on_handoff_ended(participant_id)
+            return
         if _departure_handled:
             return
         if _matched_participant_sid != participant_id:
@@ -569,14 +592,16 @@ async def run_bot(
 
         _departure_handled = True
         logger.info(f"Caller left LiveKit room: sid={participant_id}")
-        try:
-            await audiobuffer.stop_recording()
-        except Exception as e:
-            logger.exception(f"Failed to stop recording: {e}")
+        if _orchestrator.state.phase.value == "handoff_complete":
+            await _orchestrator.on_handoff_ended(participant_id)
+        elif _orchestrator.is_transfer_in_progress():
+            await _orchestrator.on_carrier_left_primary()
+        await _stop_recording_once()
         await task.cancel()
 
     runner = PipelineRunner(handle_sigint=handle_sigint)
     await runner.run(task)
+    await _stop_recording_once()
 
     # Room1 pipeline has ended. Two possibilities:
     # 1. Normal disconnect (no transfer) → clean up and exit
@@ -604,8 +629,18 @@ async def run_bot(
     # Save transcript after pipeline ends
     if hasattr(context, "call_id") and context.call_id:
         end_reason = getattr(context, "end_reason", "abrupt")
-        transcription = getattr(context, "transcript_messages", None)
+        transcription = list(getattr(context, "transcript_messages", None) or [])
+        transcription.extend(
+            {
+                "role": "agent" if message["role"] == "agent" else "caller",
+                "content": f"[BROKER CONSULTATION] {message['content']}",
+                "timestamp": message["timestamp"],
+            }
+            for message in _orchestrator.state.room2_transcript
+        )
         call_summary = {"outcome": end_reason}
+        if _orchestrator.state.attempt_id:
+            call_summary["transfer"] = _orchestrator.state.audit_snapshot()
 
         try:
             universal_context = snapshot_universal_context(context)

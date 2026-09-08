@@ -53,7 +53,9 @@ jobs:
             tests/test_livekit_ingress.py \
             tests/test_telephony_config.py \
             tests/test_livekit_telephony_service.py \
+            tests/test_livekit_transfer_media.py \
             tests/test_livekit_transfer_orchestrator.py \
+            tests/test_room2_pipeline_service.py \
             tests/test_server_livekit.py \
             tests/test_transfer_tool_handler.py \
             tests/test_voice_prompt_guardrails.py \

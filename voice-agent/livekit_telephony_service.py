@@ -8,6 +8,7 @@ network connection and keeps provider concerns out of the prompt/tool layer.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import asyncio
 from typing import Any, Protocol
 from uuid import uuid4
 
@@ -25,6 +26,10 @@ class SipParticipant:
     identity: str
     participant_id: str | None
     provider_call_id: str | None
+
+
+class ParticipantMoveOutcomeUnknown(RuntimeError):
+    """Raised when reconciliation cannot prove where the participant landed."""
 
 
 class LiveKitGateway(Protocol):
@@ -52,6 +57,10 @@ class LiveKitGateway(Protocol):
     async def remove_participant(
         self, *, room_name: str, participant_identity: str
     ) -> None: ...
+
+    async def participant_exists(
+        self, *, room_name: str, participant_identity: str
+    ) -> bool: ...
 
 
 class LiveKitSdkGateway:
@@ -149,6 +158,25 @@ class LiveKitSdkGateway:
                 if not _is_not_found(exc):
                     raise
 
+    async def participant_exists(
+        self, *, room_name: str, participant_identity: str
+    ) -> bool:
+        from livekit import api
+
+        async with self._client() as client:
+            try:
+                await client.room.get_participant(
+                    api.RoomParticipantIdentity(
+                        room=room_name,
+                        identity=participant_identity,
+                    )
+                )
+                return True
+            except Exception as exc:
+                if _is_not_found(exc):
+                    return False
+                raise
+
 
 class LiveKitTelephonyService:
     """Application-facing control surface for LiveKit/Telnyx calls."""
@@ -198,8 +226,9 @@ class LiveKitTelephonyService:
         phone_number: str,
         role: str,
         display_name: str,
+        participant_identity: str | None = None,
     ) -> SipParticipant:
-        identity = f"{role}-{uuid4().hex[:12]}"
+        identity = participant_identity or f"{role}-{uuid4().hex[:12]}"
         return await self.gateway.create_sip_participant(
             room_name=room_name,
             phone_number=phone_number,
@@ -219,6 +248,107 @@ class LiveKitTelephonyService:
             destination_room=destination_room,
             participant_identity=participant_identity,
         )
+
+    async def participant_exists(
+        self, *, room_name: str, participant_identity: str
+    ) -> bool:
+        return await self.gateway.participant_exists(
+            room_name=room_name,
+            participant_identity=participant_identity,
+        )
+
+    async def wait_for_participant(
+        self,
+        *,
+        room_name: str,
+        participant_identity: str,
+        timeout: float,
+        poll_interval: float = 0.25,
+    ) -> bool:
+        """Wait until LiveKit confirms a participant is present in a room."""
+
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        while True:
+            if await self.participant_exists(
+                room_name=room_name,
+                participant_identity=participant_identity,
+            ):
+                return True
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                return False
+            await asyncio.sleep(min(poll_interval, remaining))
+
+    async def move_participant_verified(
+        self,
+        *,
+        source_room: str,
+        destination_room: str,
+        participant_identity: str,
+        timeout: float,
+    ) -> None:
+        """Move once, reconcile, and retry only after a conclusive source state.
+
+        A participant found in neither room is an ambiguous provider outcome. The
+        method never repeats that move because a duplicate request could race a
+        delayed successful handoff.
+        """
+
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        for move_number in (1, 2):
+            move_error: Exception | None = None
+            try:
+                await self.move_participant(
+                    source_room=source_room,
+                    destination_room=destination_room,
+                    participant_identity=participant_identity,
+                )
+            except Exception as exc:
+                move_error = exc
+
+            remaining = max(0.0, deadline - loop.time())
+            reconcile_window = (
+                remaining / 2
+                if move_number == 1 and move_error is not None
+                else remaining
+            )
+            try:
+                if reconcile_window > 0 and await self.wait_for_participant(
+                    room_name=destination_room,
+                    participant_identity=participant_identity,
+                    timeout=reconcile_window,
+                ):
+                    return
+
+                in_source = await self.participant_exists(
+                    room_name=source_room,
+                    participant_identity=participant_identity,
+                )
+            except Exception as exc:
+                raise ParticipantMoveOutcomeUnknown(
+                    "Participant reconciliation failed after move submission"
+                ) from exc
+            if (
+                in_source
+                and move_number == 1
+                and move_error is not None
+                and deadline - loop.time() > 0
+            ):
+                continue
+            if in_source:
+                if move_error is not None:
+                    raise move_error
+                raise RuntimeError("Broker remained in the consultation room")
+
+            if move_error is not None:
+                raise ParticipantMoveOutcomeUnknown(
+                    "Broker move failed and participant location is unknown"
+                ) from move_error
+            raise ParticipantMoveOutcomeUnknown(
+                "Broker did not arrive and participant location is unknown"
+            )
 
     async def remove_participant(
         self, *, room_name: str, participant_identity: str

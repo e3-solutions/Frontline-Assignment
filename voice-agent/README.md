@@ -25,7 +25,9 @@ The negotiation remains a single-prompt agent. The system prompt and load-specif
 
 The carrier conversation exposes `verify_carrier`, `get_load_context`, `record_agreement`, `end_call`, and `transfer_to_human`. The broker briefing uses `transfer_human_to_carrier` to complete the transfer.
 
-During a warm transfer, the carrier remains in Room1 while the bot creates Room2, dials the broker through LiveKit SIP, and briefs the broker with the captured negotiation context. LiveKit then moves the broker participant from Room2 into Room1. The bot stops the Room2 briefing pipeline and deletes the temporary room.
+During a warm transfer, the carrier remains in Room1 with hold music while the bot creates Room2, dials the broker through LiveKit SIP, and briefs the broker with the captured negotiation context. The primary pipeline is gated during the consultation and restored if the broker cannot be connected. LiveKit then moves the existing broker participant from Room2 into Room1, reconciles their destination, and only then records the call as transferred. Duplicate handoff callbacks are serialized and an ambiguous move is never repeated. The bot stops the Room2 briefing pipeline and deletes the temporary room after a terminal result.
+
+Transfer state is process-local in this single-call runner. The final call result includes a bounded phase/outcome audit and the Room2 transcript. Durable crash recovery, voicemail detection, and provider operation fencing require the later multi-runner telephony runtime and are outside this repository's architecture.
 
 ## Source map
 
@@ -38,7 +40,7 @@ During a warm transfer, the carrier remains in Room1 while the bot creates Room2
 | `bot.py` | Speech pipeline and function registration |
 | `voice_prompt.py`, `load_context_utils.py` | Initial greeting and load-specific negotiation prompt |
 | `tool_definitions.py`, `call_helpers.py` | Tool schemas and implementations |
-| `orchestrator.py`, `transfer_tool_handler.py`, `room2_pipeline_service.py` | Room1/Room2 broker transfer and briefing |
+| `orchestrator.py`, `livekit_transfer_media.py`, `transfer_tool_handler.py`, `room2_pipeline_service.py` | Room1 hold, Room2 broker briefing, verified handoff, and cleanup |
 | `../shared/` | Database, carrier, quote, and load-normalization services |
 
 ## Install and run
@@ -73,7 +75,7 @@ Use `Dockerfile.server` for port 8080 and `Dockerfile.bot` for port 7860. Both r
 - **Health succeeds but calls fail:** inspect both process logs and provider consoles. Health does not check LiveKit, Telnyx, speech services, Supabase, or SIP routing.
 - **No greeting or load:** check the called-number organization mapping, seeded load/stops data, provider credentials, and carrier-lookup service.
 - **Outbound call fails:** check the outbound trunk, its Telnyx credentials and allowed destinations, caller ID ownership, E.164 formatting, and the broker/carrier test number.
-- **Transfer fails:** check Room1/Room2 participant state, the load's test broker routing, outbound trunk, and `SLACK_WEBHOOK_URL`. Use test numbers and a development Slack destination.
+- **Transfer fails:** check Room1/Room2 participant state, the load's test broker routing, outbound trunk, and transfer timeout values. `SLACK_WEBHOOK_URL` notifications are best-effort. Use test numbers and a development Slack destination.
 - **No recording playback:** check the `call-recordings` Storage bucket and its access settings in [Database setup](../docs/DATABASE_SETUP.md).
 
 Automated tests exercise deterministic logic with fakes and mocks. They do not claim a successful real call, provider connection, SIP transfer, database write, recording, or quote submission.
