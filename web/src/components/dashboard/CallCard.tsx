@@ -141,7 +141,7 @@ export function CallsTable({
                                           onToggle={() =>
                                              onExpandedCallChange(isExpanded ? null : call.id)
                                           }
-                                          label={`${isExpanded ? "Collapse" : "Expand"} call ${call.dailyCallId}`}
+                                          label={`${isExpanded ? "Collapse" : "Expand"} call ${call.providerCallId}`}
                                        />
                                        <StatusChip label={status.label} tone={status.tone} />
                                     </div>
@@ -152,7 +152,7 @@ export function CallsTable({
                                           {call.callerNumber}
                                        </p>
                                        <p className="truncate pt-1 text-xs text-[color:var(--e3-text-soft)] e3-font-body">
-                                          Daily {call.dailyCallId}
+                                          {call.telephonyProvider === "livekit" ? "LiveKit" : "Daily"} {call.providerCallId}
                                        </p>
                                     </div>
                                  </td>
@@ -224,7 +224,7 @@ export function CallsTable({
                                                 ? () => {
                                                      const a = document.createElement("a");
                                                      a.href = call.result.audio_url!;
-                                                     a.download = `call-${call.callerNumber || call.dailyCallId}.wav`;
+                                                     a.download = `call-${call.callerNumber || call.providerCallId}.wav`;
                                                      a.target = "_blank";
                                                      document.body.appendChild(a);
                                                      a.click();
@@ -330,7 +330,9 @@ function ExpandedCallDetails({
                </h3>
                <div className="mt-4 space-y-2 text-sm text-[color:var(--e3-text-muted)] e3-font-body">
                   <p className="break-words">Caller: {call.callerNumber}</p>
-                  <p className="break-all">Daily Call ID: {call.dailyCallId}</p>
+                  <p className="break-all">
+                     {call.telephonyProvider === "livekit" ? "LiveKit" : "Daily"} Call ID: {call.providerCallId}
+                  </p>
                   <p>Outcome: {statusLabel}</p>
                   <p>
                      Linked load:{" "}
@@ -417,7 +419,7 @@ function ExpandedCallDetails({
                            ? () => {
                                 const a = document.createElement("a");
                                 a.href = call.result.audio_url!;
-                                a.download = `call-${call.callerNumber || call.dailyCallId}.wav`;
+                                a.download = `call-${call.callerNumber || call.providerCallId}.wav`;
                                 a.target = "_blank";
                                 document.body.appendChild(a);
                                 a.click();

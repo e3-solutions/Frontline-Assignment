@@ -77,8 +77,8 @@ def initialize(args, password):
         + list((ROOT / "supabase/migrations").glob("*.sql")),
         key=lambda path: path.name,
     )
-    if len(files) != 39 or len({path.name for path in files}) != len(files):
-        raise RuntimeError("Expected the 39 supplied historical migrations; review the installer before changing the migration set.")
+    if len(files) != 40 or len({path.name for path in files}) != len(files):
+        raise RuntimeError("Expected the 40 supplied migrations; review the installer before changing the migration set.")
 
     for path in files:
         if path.name.startswith("20260415000000_"):
@@ -155,7 +155,7 @@ def main():
     parser.add_argument("--database", default="postgres", help="Name of the disposable local database")
     parser.add_argument("--password-stdin", action="store_true", help="Read the local password from stdin instead of prompting")
     parser.add_argument("--auth-user-id", help="Existing local Supabase Auth UUID to link during seed")
-    parser.add_argument("--phone-number", default="+12025550100", help="Local seed's incoming bot number (replace with your development Daily number)")
+    parser.add_argument("--phone-number", default="+12025550100", help="Local seed's incoming bot number (replace with your development LiveKit SIP number)")
     parser.add_argument("--transfer-phone", help="Set the sample load's transfer destination; omitted values preserve existing routing")
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:

@@ -30,7 +30,7 @@ npm ci
 cp .env.example .env.local
 ```
 
-Use the same isolated Supabase URL as the voice service, its public anon key, and its server-only service role key. Set `NEXT_PUBLIC_AGENT_PHONE_NUMBER` to the development Daily number. Optional server `SUPABASE_URL` and `SUPABASE_ANON_KEY` values override their `NEXT_PUBLIC_` counterparts; if set, they must refer to the same project.
+Use the same isolated Supabase URL as the voice service, its public anon key, and its server-only service role key. Set `NEXT_PUBLIC_AGENT_PHONE_NUMBER` to the development LiveKit SIP number. Optional server `SUPABASE_URL` and `SUPABASE_ANON_KEY` values override their `NEXT_PUBLIC_` counterparts; if set, they must refer to the same project.
 
 Set `COMPANY_REGISTRATION_SECRET_HASH` to the SHA-256 hash of a development registration code. You can generate the hash without saving the code in shell history:
 

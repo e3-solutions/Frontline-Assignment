@@ -23,6 +23,14 @@ jobs:
       SUPABASE_URL: http://test-suite.local
       SUPABASE_SERVICE_ROLE_KEY: test-key
       OPENAI_API_KEY: test-key
+      LIVEKIT_URL: wss://test-suite.livekit.invalid
+      LIVEKIT_API_KEY: test-key
+      LIVEKIT_API_SECRET: test-secret
+      LIVEKIT_SIP_INBOUND_TRUNK_ID: ST_test_inbound
+      LIVEKIT_SIP_DISPATCH_RULE_ID: SDR_test_inbound
+      LIVEKIT_SIP_OUTBOUND_TRUNK_ID: ST_test_outbound
+      LIVEKIT_SIP_OUTBOUND_NUMBER: "+12025550199"
+      OUTBOUND_CALL_API_KEY: test-outbound-api-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -42,6 +50,13 @@ jobs:
             tests/test_carrier_service_backend.py \
             tests/test_phone_carrier_lookup.py \
             tests/test_phone_verification.py \
+            tests/test_livekit_ingress.py \
+            tests/test_telephony_config.py \
+            tests/test_livekit_telephony_service.py \
+            tests/test_livekit_transfer_media.py \
+            tests/test_livekit_transfer_orchestrator.py \
+            tests/test_room2_pipeline_service.py \
+            tests/test_server_livekit.py \
             tests/test_transfer_tool_handler.py \
             tests/test_voice_prompt_guardrails.py \
             -v --tb=short

@@ -88,6 +88,8 @@ export type CallRecord = {
    id: string;
    loadId: string;
    dailyCallId: string;
+   telephonyProvider: "daily" | "livekit";
+   providerCallId: string;
    negotiationResult?: string;
    callerNumber: string;
    callerCountryCode: string;

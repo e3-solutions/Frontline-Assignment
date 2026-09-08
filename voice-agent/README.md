@@ -1,33 +1,51 @@
-# Daily freight negotiation voice agent
+# LiveKit/Telnyx freight negotiation voice agent
 
-The agent receives inbound Daily PSTN calls, verifies a carrier, retrieves a load, negotiates from a single prompt, records an agreement, and can transfer the caller to a broker.
+The agent receives inbound or initiates outbound SIP calls through LiveKit and Telnyx, verifies a carrier, retrieves a load, negotiates from a single prompt, records an agreement, and can warm-transfer the caller to a broker.
 
 ## Call flow
 
-1. Daily sends the incoming call to the webhook server at `/daily-webhook`.
-2. `server.py` obtains a Daily room and sends the call metadata to the bot runner's `/start` endpoint.
-3. `bot.py` joins the room; Daily connects the waiting caller when the bot is ready.
-4. The pipeline uses Deepgram `nova-3` for transcription, OpenAI `gpt-4.1` for the conversation, and Cartesia for speech. Voice activity and turn detection run locally.
-5. Tools verify the carrier, retrieve load data, record the agreement, end the call, or begin a broker transfer.
-6. A transfer uses another Daily room to brief the broker, then connects the broker with the carrier. Call records and audio are written to the configured Supabase project.
+### Inbound
+
+1. Telnyx sends the development PSTN call through the configured LiveKit inbound SIP trunk.
+2. A LiveKit dispatch rule places the caller in Room1. LiveKit sends the signed SIP participant event to `POST /livekit-webhook`.
+3. `server.py` verifies the signature, event type, SIP participant attributes, inbound trunk, and dispatch rule, then sends a transport-neutral request to the bot runner's `/start` endpoint.
+4. `bot.py` joins Room1 through LiveKit. The pipeline uses Deepgram `nova-3` for transcription, OpenAI `gpt-4.1` for the conversation, and Cartesia for speech. Voice activity and turn detection run locally.
+
+### Outbound
+
+1. An authorized caller sends E.164 `to_phone` and `from_phone` values to `POST /outbound-call`, with `X-API-Key` matching `OUTBOUND_CALL_API_KEY`.
+2. The server creates Room1, asks LiveKit to dial the carrier through the configured Telnyx outbound trunk, and starts the bot runner in the room.
+3. The same prompt and tool path handles the negotiation after the SIP participant answers.
+
+The endpoint is disabled when `OUTBOUND_CALL_API_KEY` is empty and rejects a missing or incorrect `X-API-Key`. Keep it private for this exercise or place it behind an authenticated internal gateway before exposing outbound dialing.
+
+## Prompt and tools
+
+The negotiation remains a single-prompt agent. The system prompt and load-specific context guide one LLM context; the telephony migration does not introduce a graph or flow-based agent architecture.
+
+The carrier conversation exposes `verify_carrier`, `get_load_context`, `record_agreement`, `end_call`, and `transfer_to_human`. The broker briefing uses `transfer_human_to_carrier` to complete the transfer.
+
+During a warm transfer, the carrier remains in Room1 with hold music while the bot creates Room2, dials the broker through LiveKit SIP, and briefs the broker with the captured negotiation context. The primary pipeline is gated during the consultation and restored if the broker cannot be connected. LiveKit then moves the existing broker participant from Room2 into Room1, reconciles their destination, and only then records the call as transferred. Duplicate handoff callbacks are serialized and an ambiguous move is never repeated. The bot stops the Room2 briefing pipeline and deletes the temporary room after a terminal result.
+
+Transfer state is process-local in this single-call runner. The final call result includes a bounded phase/outcome audit and the Room2 transcript. Durable crash recovery, voicemail detection, and provider operation fencing require the later multi-runner telephony runtime and are outside this repository's architecture.
 
 ## Source map
 
 | File | Purpose |
 | --- | --- |
-| `server.py`, `server_utils.py` | Webhook handling, request models, and bot startup |
-| `room_pool_service.py` | Daily room creation and reuse |
+| `server.py`, `server_utils.py` | Inbound webhook, outbound request, bot-runner routing, and health endpoints |
+| `livekit_ingress.py` | Signed LiveKit webhook verification and SIP event validation |
+| `telephony_config.py` | Typed LiveKit/SIP configuration and readiness validation |
+| `livekit_telephony_service.py` | LiveKit room, SIP participant, and participant-move SDK boundary |
 | `bot.py` | Speech pipeline and function registration |
 | `voice_prompt.py`, `load_context_utils.py` | Initial greeting and load-specific negotiation prompt |
 | `tool_definitions.py`, `call_helpers.py` | Tool schemas and implementations |
-| `orchestrator.py`, `transfer_tool_handler.py`, `room2_pipeline_service.py` | Broker transfer and briefing |
-| `../shared/` | Database, carrier, quote, and load normalization services |
-
-The carrier conversation exposes `verify_carrier`, `get_load_context`, `record_agreement`, `end_call`, and `transfer_to_human`. The broker briefing uses `transfer_human_to_carrier` to complete the transfer.
+| `orchestrator.py`, `livekit_transfer_media.py`, `transfer_tool_handler.py`, `room2_pipeline_service.py` | Room1 hold, Room2 broker briefing, verified handoff, and cleanup |
+| `../shared/` | Database, carrier, quote, and load-normalization services |
 
 ## Install and run
 
-Follow [Local setup](../docs/LOCAL_SETUP.md) for system packages, installation commands, `.env` configuration, and database preparation. Run both processes from this directory, with the repository's virtual environment activated in each terminal:
+Follow [Local setup](../docs/LOCAL_SETUP.md) for system packages, installation, `.env` configuration, LiveKit/Telnyx provisioning, and database preparation. Run both processes from this directory, with the repository virtual environment activated in each terminal:
 
 ```bash
 source ../.venv/bin/activate
@@ -41,11 +59,9 @@ source ../.venv/bin/activate
 python bot.py
 ```
 
-The server listens on port 8080 and calls `LOCAL_BOT_URL` (default `http://localhost:7860`). The bot runner listens on 7860 and returns rooms through `LOCAL_SERVER_URL` (default `http://localhost:8080`). Both load `.env` with override enabled, so edit that file to change settings; shell exports of the same variable can be overridden.
+The server listens on port 8080 and calls `LOCAL_BOT_URL` (default `http://localhost:7860`). The bot runner listens on port 7860. Both load `.env` with override enabled, so edit that file to change settings; shell exports of the same variable can be overridden.
 
-The example starts with `ROOM_POOL_SIZE=0` for local health checks. This skips room creation at server startup. Receiving a webhook still attempts to create a Daily room and needs valid credentials. Set a positive pool size after configuring the development Daily account.
-
-For a call, expose the webhook server using a tunnel and configure the development Daily number as described in [Connect a development phone number](../docs/LOCAL_SETUP.md#connect-a-development-phone-number).
+`POST /livekit-webhook` is the signed inbound event path. `POST /outbound-call` is the programmatic outbound path. The `/health` endpoints report local process availability only.
 
 ## Containers
 
@@ -53,8 +69,13 @@ Use `Dockerfile.server` for port 8080 and `Dockerfile.bot` for port 7860. Both r
 
 ## Troubleshooting
 
+- **Configuration reports not ready:** check every LiveKit URL, API credential, SIP trunk ID, dispatch-rule ID, outbound number, and E.164 value. The inbound IDs must match the attributes in the signed event.
+- **Webhook is rejected:** confirm LiveKit targets `/livekit-webhook`, preserves its authorization header and body, emits SIP `participant_joined` events, and uses the configured inbound trunk and dispatch rule.
 - **Imports or audio fail:** use Python 3.11, install the full requirements and NLTK tokenizer data from [Local setup](../docs/LOCAL_SETUP.md), and check `ffmpeg` and `libsndfile1`. Run from `voice-agent/` so static assets resolve.
-- **Health succeeds but calls fail:** health endpoints only check HTTP process availability. Inspect both process logs for Daily room creation, speech service connections, and database errors.
-- **No greeting or load:** check the dialed number's organization mapping, seeded load/stops data, provider credentials, and the selected carrier lookup service.
-- **Transfer fails:** check Daily dial-out/SIP permissions, the load's test broker routing and `SLACK_WEBHOOK_URL`. Use test numbers and a development Slack destination.
+- **Health succeeds but calls fail:** inspect both process logs and provider consoles. Health does not check LiveKit, Telnyx, speech services, Supabase, or SIP routing.
+- **No greeting or load:** check the called-number organization mapping, seeded load/stops data, provider credentials, and carrier-lookup service.
+- **Outbound call fails:** check the outbound trunk, its Telnyx credentials and allowed destinations, caller ID ownership, E.164 formatting, and the broker/carrier test number.
+- **Transfer fails:** check Room1/Room2 participant state, the load's test broker routing, outbound trunk, and transfer timeout values. `SLACK_WEBHOOK_URL` notifications are best-effort. Use test numbers and a development Slack destination.
 - **No recording playback:** check the `call-recordings` Storage bucket and its access settings in [Database setup](../docs/DATABASE_SETUP.md).
+
+Automated tests exercise deterministic logic with fakes and mocks. They do not claim a successful real call, provider connection, SIP transfer, database write, recording, or quote submission.

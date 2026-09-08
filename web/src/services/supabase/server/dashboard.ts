@@ -38,7 +38,7 @@ export const createDashboardService = (client: SupabaseClient) => ({
     getByLoadIds: (loadIds: string[]) =>
       client
         .from("calls")
-        .select("id, load_id, end_reason, result, initiated_at, negotiation_result, recording_url")
+        .select("id, load_id, end_reason, result, initiated_at, negotiation_result, recording_url, telephony_provider, provider_call_id")
         .in("load_id", loadIds)
         .order("initiated_at", { ascending: false }),
 
@@ -54,6 +54,8 @@ export const createDashboardService = (client: SupabaseClient) => ({
           id,
           load_id,
           daily_call_id,
+          telephony_provider,
+          provider_call_id,
           negotiation_result,
           caller_number,
           caller_country_code,

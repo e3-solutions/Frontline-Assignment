@@ -1,61 +1,30 @@
-"""DailyTransport factory.
+"""LiveKit transport factory used by the voice pipelines."""
 
-Single Responsibility: Create configured DailyTransport instances.
-"""
-
-import os
 from pathlib import Path
 
 from pipecat.audio.mixers.soundfile_mixer import SoundfileMixer
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
-from pipecat.transports.daily.transport import (
-    DailyDialinSettings,
-    DailyParams,
-    DailyTransport,
-)
-from dotenv import load_dotenv
-
-load_dotenv(override=True)
+from pipecat.transports.livekit.transport import LiveKitParams, LiveKitTransport
 
 
 class TransportFactory:
-    """Creates DailyTransport instances with standard configuration."""
+    """Create consistently configured LiveKit transports."""
 
     @staticmethod
     def _audio_asset_path(filename: str) -> str:
-        """Resolve audio assets relative to the voice-agent app directory."""
         return str(Path(__file__).parent / "static" / "audio" / filename)
 
     @staticmethod
     def create(
-        room_url: str,
+        url: str,
         token: str,
+        room_name: str,
         bot_name: str = "Negotiation Agent",
-        daily_dialin_settings: DailyDialinSettings = None,
-    ) -> DailyTransport:
-        """Create a DailyTransport with standard audio settings.
-
-        Args:
-            room_url: Daily room URL to join
-            token: Authentication token
-            bot_name: Display name for the bot
-            dialin_settings: Optional dial-in settings for PSTN calls
-
-        Returns:
-            Configured DailyTransport instance
-
-        Parameters
-        ----------
-        room_url
-        token
-        bot_name
-        daily_dialin_settings
-        """
-        params = DailyParams(
-            api_key=os.getenv("DAILY_API_KEY"),
+    ) -> LiveKitTransport:
+        """Create the full duplex transport used by a negotiation pipeline."""
+        params = LiveKitParams(
             audio_in_enabled=True,
-            dialin_settings=daily_dialin_settings,
             audio_in_passthrough=True,
             audio_out_enabled=True,
             audio_out_mixer=SoundfileMixer(
@@ -66,46 +35,33 @@ class TransportFactory:
                 volume=0.1,
                 loop=True,
             ),
-            vad_analyzer=SileroVADAnalyzer(
-                params=VADParams(stop_secs=0.3)
-            ),
+            vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.3)),
         )
 
-        return DailyTransport(
-            room_url,
+        # LiveKit obtains the participant identity from the access token. The
+        # descriptive name is still useful for Pipecat processor names.
+        return LiveKitTransport(
+            url,
             token,
-            bot_name,
+            room_name,
             params=params,
+            input_name=f"{bot_name} input",
+            output_name=f"{bot_name} output",
         )
 
     @staticmethod
     def create_hold_music(
-        room_url: str,
+        url: str,
         token: str,
-        daily_dialin_settings: DailyDialinSettings = None,
-    ) -> DailyTransport:
-        """Create a minimal DailyTransport that only plays hold music.
-
-        Args:
-            room_url: Daily room URL to join
-            token: Authentication token
-
-        Returns:
-            DailyTransport configured for hold music only
-
-        Parameters
-        ----------
-        room_url
-        token
-        daily_dialin_settings
-        """
-        return DailyTransport(
-            room_url,
+        room_name: str,
+        bot_name: str = "Hold Music",
+    ) -> LiveKitTransport:
+        """Create an output-only LiveKit transport for a hold-music pipeline."""
+        return LiveKitTransport(
+            url,
             token,
-            "Hold Music",
-            params=DailyParams(
-                api_key=os.getenv("DAILY_API_KEY"),
-                dialin_settings=daily_dialin_settings,
+            room_name,
+            params=LiveKitParams(
                 audio_in_enabled=False,
                 audio_out_enabled=True,
                 audio_out_mixer=SoundfileMixer(
@@ -117,4 +73,6 @@ class TransportFactory:
                     loop=True,
                 ),
             ),
+            input_name=f"{bot_name} input",
+            output_name=f"{bot_name} output",
         )

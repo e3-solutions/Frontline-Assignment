@@ -125,17 +125,17 @@ is server-only; never put it in a `NEXT_PUBLIC_` variable. Containerized
 applications must use an address that reaches the host's local Supabase API;
 `localhost` inside an application container points at that container.
 
-For a real development Daily call, register your assigned inbound number against
+For a real development LiveKit SIP call, register your assigned inbound number against
 the seeded organization and use a transfer destination you control:
 
 ```bash
 python3 scripts/setup_local_database.py seed \
-  --phone-number +YOUR_DEVELOPMENT_DAILY_NUMBER \
+  --phone-number +YOUR_DEVELOPMENT_LIVEKIT_NUMBER \
   --transfer-phone +YOUR_DEVELOPMENT_TRANSFER_NUMBER
 ```
 
 These arguments require E.164 digits, for example `+12025550100`. Match the
-inbound number to the number Daily sends as `bot_phone`. The runtime looks up
+inbound number to the trunk number LiveKit sends as `bot_phone`. The runtime looks up
 organization identity through `phone_numbers → organizations`, reads the load
 through `loads.load_number`, embeds stops through `stops_load_number_fkey`, and
 uses `loads.carrier_sales_rep_phone` for transfers. There is no global transfer
@@ -144,7 +144,7 @@ sample load's transfer phone when `--transfer-phone` is explicitly supplied.
 Linking a user or rerunning `seed` without that argument preserves existing
 transfer routing.
 
-Provider credentials, a reachable Daily webhook, development phone provisioning,
+Provider credentials, a reachable LiveKit webhook, development phone provisioning,
 carrier lookups, and quote authorization are separate prerequisites. Local
 database setup alone does not establish a working provider call or transfer.
 

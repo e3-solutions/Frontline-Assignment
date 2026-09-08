@@ -240,7 +240,7 @@ export function DashboardClient({ loads, calls, emails, summary: _summary }: Das
                case "loadId":
                   return call.loadId;
                case "callId":
-                  return `${call.id} ${call.dailyCallId}`;
+                  return `${call.id} ${call.providerCallId}`;
                case "caller":
                default:
                   return call.callerNumber;

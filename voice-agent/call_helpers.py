@@ -70,17 +70,17 @@ def _is_plausible_load_reference(load_id: str) -> bool:
 
 def start_call(
     load_id: UUID | None = None,
-    daily_call_id: str | None = None,
     caller_number: str | None = None,
     caller_country_code: str | None = None,
     caller_mc: str | None = None,
     bot_phone: str | None = None,
+    provider_call_id: str | None = None,
+    telephony_provider: str = "livekit",
 ) -> CallRecordResult | None:
     """Create a call record in the database.
 
     Args:
         load_id: UUID of the load being discussed (optional, can be set later)
-        daily_call_id: Daily's call identifier (optional)
         caller_number: Phone number of caller (optional)
         caller_country_code: Country code of caller (optional, defaults to +1)
         caller_mc: MC (Motor Carrier) number of the caller (optional)
@@ -95,12 +95,13 @@ def start_call(
 
     try:
         return create_call_record(
-            load_id,
-            daily_call_id,
-            caller_number,
-            caller_country_code,
-            caller_mc,
-            bot_phone,
+            load_id=load_id,
+            caller_number=caller_number,
+            caller_country_code=caller_country_code,
+            caller_mc=caller_mc,
+            bot_phone=bot_phone,
+            provider_call_id=provider_call_id,
+            telephony_provider=telephony_provider,
         )
     except DatabaseOperationError:
         return None
@@ -347,8 +348,7 @@ async def _persist_phone_carrier_mapping(context: Any) -> bool:
             org_id=org,
         )
         logger.info(
-            f"Recorded phone_carrier_lookup row: phone={phone} "
-            f"mc={mc} carrier={name!r}"
+            f"Recorded phone_carrier_lookup row: phone={phone} mc={mc} carrier={name!r}"
         )
         return True
     except Exception:
@@ -509,7 +509,6 @@ async def get_load_context(
     llm: Any,
     context: Any,
     result_callback,
-    daily_call_id: str = None,
     caller_phone: str = None,
 ):
     """Function called by the LLM to retrieve load information from database.
@@ -528,7 +527,6 @@ async def get_load_context(
         llm: LLM service instance (unused, required by Pipecat)
         context: Current conversation context
         result_callback: Callback to send results back to LLM
-        daily_call_id: Daily's call identifier (optional)
         caller_phone: Caller's phone number (optional)
     """
     # Suppress unused parameter warnings - these are required by Pipecat's function signature
@@ -554,13 +552,17 @@ async def get_load_context(
             "words. Returning error so the LLM asks the caller for the "
             "reference."
         )
-        await result_callback(json.dumps({
-            "status": "error",
-            "message": (
-                "A reference number is required to look up the load. "
-                "Please ask the caller to provide their reference number first."
-            ),
-        }))
+        await result_callback(
+            json.dumps(
+                {
+                    "status": "error",
+                    "message": (
+                        "A reference number is required to look up the load. "
+                        "Please ask the caller to provide their reference number first."
+                    ),
+                }
+            )
+        )
         return
 
     logger.info(f"Retrieving load context for load_id: {load_id}")
@@ -614,12 +616,11 @@ async def get_load_context(
         # KCH `public.loads.carrier_sales_rep_phone` is already E.164; the legacy
         # split (`transfer_country_code` + `transfer_call_to` digits) is kept
         # for fixtures that still mock that shape.
-        context.transfer_call_to = (
-            coerce_e164_transfer_number(load_context.get("transfer_call_to"))
-            or build_transfer_phone_number(
-                load_context.get("transfer_country_code"),
-                load_context.get("transfer_call_to"),
-            )
+        context.transfer_call_to = coerce_e164_transfer_number(
+            load_context.get("transfer_call_to")
+        ) or build_transfer_phone_number(
+            load_context.get("transfer_country_code"),
+            load_context.get("transfer_call_to"),
         )
 
         # Update the existing call record with the load_id
