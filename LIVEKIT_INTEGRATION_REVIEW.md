@@ -9,6 +9,61 @@ the associated tests pass.
 
 ## Verified observations
 
+## Warm-transfer workflow and held-audio defect
+
+The intended agent-assisted transfer uses two LiveKit rooms:
+
+```text
+Before transfer: Room1 = carrier + primary AI
+Consultation:    Room1 = carrier + hold publisher; Room2 = broker + consultation AI
+After success:   Room1 = carrier + broker
+```
+
+1. The primary agent detects a transfer request and captures Room1 negotiation
+   context (reason, pricing, load context, transcript, and provider call ID).
+2. It creates Room2, mints a Room2 token for a consultation agent, and mints a
+   Room1 token for a hold-music publisher.
+3. Room1 should stop accepting and producing primary-agent media while the
+   carrier hears hold music.
+4. The consultation agent joins Room2; LiveKit/Telnyx dials the broker there.
+   The workflow waits for SIP answer confirmation, expected participant presence,
+   and subscribed broker audio before briefing.
+5. Once the broker accepts, LiveKit `MoveParticipant` moves that broker from
+   Room2 to Room1. The application verifies Room1 arrival before recording a
+   successful transfer, then stops Room2 and bot audio.
+6. If the broker does not answer, declines, disconnects, or media/move fails,
+   Room2 and hold resources must be removed and the Room1 agent must safely
+   resume. Ambiguous move outcomes must not be blindly retried.
+
+### Why the current hold implementation fails
+
+The implementation's `gate_primary_media(True)` calls
+`primary.transport.input().pause_processing_frames()`. In Pipecat 0.0.95 this
+does **not** disable LiveKit input and does **not** discard caller audio.
+LiveKit input continues to read audio frames and Pipecat retains them in its
+unbounded processing queue. When the failed-transfer recovery path calls
+`restore_primary()`, `resume_processing_frames()` releases those historical
+frames to STT and the LLM.
+
+This can make the agent respond to speech said while the caller was on hold,
+after the caller has returned to the primary conversation. The queue also grows
+with each second of consultation, which makes the issue worse as concurrent
+calls and consultation duration increase. Treat this as P0 because it combines
+incorrect call behavior, retained audio, and avoidable memory pressure.
+
+### Required regression tests
+
+- Start Room1, enter hold, inject caller audio frames, then recover from broker
+  no-answer. Assert that zero held frames reach STT, transcript, or LLM after
+  recovery.
+- Hold for the maximum configured consultation duration while injecting audio.
+  Instrument queue depth and memory; assert a bounded limit and no post-hold
+  backlog.
+- Verify a successful transfer also prevents Room1 primary-agent input from
+  processing held-call audio after broker arrival.
+- Verify carrier and broker disconnect races cancel input/recording and delete
+  the appropriate rooms without replaying queued speech.
+
 ### P0: held-call audio is retained and replayed
 
 `voice-agent/livekit_transfer_media.py` calls
