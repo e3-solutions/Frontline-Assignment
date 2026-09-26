@@ -1,0 +1,15 @@
+{
+  "scenario_id": "above_ceiling_false_agreement",
+  "expected_pass": false,
+  "context": {"load_id": "LOAD-1234", "start_rate": 1400, "goal_rate": 1600, "ceiling_rate": 1800},
+  "events": [
+    {"type": "caller", "content": "I need twenty-two hundred."},
+    {"type": "assistant", "content": "Great, we have a deal at twenty-two hundred and I'll send the rate confirmation."},
+    {"type": "tool_call", "name": "record_agreement", "arguments": {"agreed_price": 2200, "above_max": false}},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "agreement"}}
+  ],
+  "side_effects": [
+    {"type": "negotiation_insert", "above_max": false, "agreed_price": 2200},
+    {"type": "kch_quote", "amount": 2200}
+  ]
+}

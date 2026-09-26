@@ -158,10 +158,16 @@ def _clear_staged_carrier_identity(context) -> None:
     context.carrier_name = None
     context.caller_dot_number = None
     context.identity_source = None
+    context.carrier_identity_rejected = True
 
 
 async def _persist_confirmed_carrier_identity_from_transcript(context) -> None:
     try:
+        if os.getenv("HIGHWAY_PHONE_LOOKUP_ENABLED", "false").lower() != "true":
+            context.carrier_identity_confirmed = True
+            context.carrier_identity_rejected = False
+            logger.info("Carrier identity confirmed; phone-cache persistence is disabled")
+            return
         succeeded = await persist_confirmed_carrier_identity(context)
         if succeeded:
             logger.info("Carrier identity confirmed from caller transcript")
@@ -203,6 +209,7 @@ def _handle_carrier_identity_confirmation_from_transcript(
 
     if _has_confirmation_phrase(normalized, _AFFIRMATIVE_IDENTITY_CONFIRMATION_PHRASES):
         context.awaiting_carrier_identity_confirmation = False
+        context.carrier_identity_rejected = False
         task = asyncio.create_task(
             _persist_confirmed_carrier_identity_from_transcript(context)
         )
@@ -504,7 +511,10 @@ async def run_bot(
         display_role = "Caller" if message.role == "user" else "Agent"
         logger.info(f"[Transcript] {display_role}: {message.content}")
 
-        if phone_first_enabled and message.role == "user":
+        # Identity confirmation is a safety boundary for both the phone-first
+        # and ordinary MC-first flows. Persistence remains feature-gated inside
+        # the helper, but a denial must always clear the staged identity.
+        if message.role == "user":
             _handle_carrier_identity_confirmation_from_transcript(
                 context, message.content
             )

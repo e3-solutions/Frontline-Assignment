@@ -1,0 +1,20 @@
+{
+  "scenario_id": "three_mc_not_found",
+  "expected_pass": true,
+  "context": {},
+  "events": [
+    {"type": "caller", "content": "Try 111111."},
+    {"type": "assistant", "content": "Let me check that."},
+    {"type": "tool_call", "name": "verify_carrier", "arguments": {"mc_number": "111111"}},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "not_found"}},
+    {"type": "caller", "content": "Try 222222."},
+    {"type": "tool_call", "name": "verify_carrier", "arguments": {"mc_number": "222222"}},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "not_found"}},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "error"}},
+    {"type": "caller", "content": "Try 333333."},
+    {"type": "tool_call", "name": "verify_carrier", "arguments": {"mc_number": "333333"}},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "not_found"}},
+    {"type": "assistant", "content": "Sorry, I still cannot verify the MC. Thanks for calling."},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "mc_not_found"}}
+  ]
+}

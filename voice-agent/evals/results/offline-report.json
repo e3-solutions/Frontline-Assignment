@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "scenario_id": "above_ceiling_false_agreement",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "negotiation",
+          "code": "IMPLIED_AGREEMENT",
+          "message": "Assistant implied an agreement in an above-ceiling scenario",
+          "severity": "critical",
+          "event_index": 1
+        },
+        {
+          "grader": "negotiation",
+          "code": "NORMAL_AGREEMENT_ABOVE_CEILING",
+          "message": "$2200 exceeds ceiling $1800 but above_max is not true",
+          "severity": "critical",
+          "event_index": 2
+        },
+        {
+          "grader": "outcome",
+          "code": "WRONG_ABOVE_MAX_END_REASON",
+          "message": "Above-ceiling flow must end with no_agreement",
+          "severity": "critical",
+          "event_index": 3
+        },
+        {
+          "grader": "side_effects",
+          "code": "NORMAL_ROW_ABOVE_CEILING",
+          "message": "Above-ceiling bid was stored as an ordinary agreement",
+          "severity": "critical",
+          "event_index": null
+        },
+        {
+          "grader": "side_effects",
+          "code": "KCH_QUOTE_FOR_ABOVE_MAX",
+          "message": "Rejected above-max bid triggered an accepted quote",
+          "severity": "critical",
+          "event_index": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "above_ceiling_pass",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "scenario_id": "below_goal_bad_counter",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "negotiation",
+          "code": "COUNTER_NOT_BELOW_CARRIER_BID",
+          "message": "Counter $1525 must be below carrier bid $1500",
+          "severity": "critical",
+          "event_index": 2
+        }
+      ]
+    },
+    {
+      "scenario_id": "empty_trace",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "completeness",
+          "code": "EMPTY_TRACE",
+          "message": "Trace contains no events",
+          "severity": "critical",
+          "event_index": null
+        },
+        {
+          "grader": "completeness",
+          "code": "MISSING_CALLER_INPUT",
+          "message": "No caller input was recorded",
+          "severity": "critical",
+          "event_index": null
+        },
+        {
+          "grader": "completeness",
+          "code": "MISSING_ASSISTANT_OUTPUT",
+          "message": "No assistant output was recorded",
+          "severity": "critical",
+          "event_index": null
+        },
+        {
+          "grader": "completeness",
+          "code": "MISSING_TERMINAL_ACTION",
+          "message": "No terminal action was recorded",
+          "severity": "critical",
+          "event_index": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "incomplete_trace",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "completeness",
+          "code": "MISSING_TERMINAL_ACTION",
+          "message": "Scenario did not reach end_call",
+          "severity": "critical",
+          "event_index": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "three_mc_not_found_rejection_not_strike",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "identity",
+          "code": "PREMATURE_MC_TERMINATION",
+          "message": "mc_not_found requires three actual not_found tool results",
+          "severity": "critical",
+          "event_index": 6
+        }
+      ]
+    },
+    {
+      "scenario_id": "three_mc_not_found",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "scenario_id": "wrong_identity_rejected_blocked",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "scenario_id": "wrong_identity_rejected_used",
+      "passed": false,
+      "findings": [
+        {
+          "grader": "identity",
+          "code": "WRONG_IDENTITY_USED",
+          "message": "get_load_context was called after the identity was rejected",
+          "severity": "critical",
+          "event_index": 2
+        }
+      ]
+    }
+  ]
+}

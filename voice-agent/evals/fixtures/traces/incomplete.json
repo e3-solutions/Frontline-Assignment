@@ -1,0 +1,10 @@
+{
+  "scenario_id": "incomplete_trace",
+  "expected_pass": false,
+  "context": {"ceiling_rate": 1800},
+  "events": [
+    {"type": "caller", "content": "I need twenty-two hundred."},
+    {"type": "assistant", "content": "Let me see what I can do."}
+  ],
+  "side_effects": []
+}

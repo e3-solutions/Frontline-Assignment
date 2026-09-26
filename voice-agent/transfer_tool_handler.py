@@ -6,6 +6,7 @@ Single Responsibility: Handle LLM tool calls that trigger room transfers.
 import json
 
 from loguru import logger
+from negotiation_guardrails import identity_is_blocked
 from src import (
     NegotiationDBService,
     build_transfer_phone_number,
@@ -73,6 +74,14 @@ class TransferToolHandler:
                     ),
                 })
             )
+            return
+
+        if identity_is_blocked(context):
+            logger.warning("Transfer blocked: carrier identity is not confirmed")
+            await result_callback(json.dumps({
+                "status": "error",
+                "message": "Cannot transfer until the carrier identity is confirmed.",
+            }))
             return
 
         reason = args.get("reason", "")

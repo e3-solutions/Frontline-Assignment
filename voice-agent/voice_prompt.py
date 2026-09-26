@@ -154,8 +154,8 @@ For above-max bids (carrier won't go below ${ctx["maxRate"]} but provides contac
 2. Use the record_agreement function with:
    - agreed_price (their proposed rate), above_max=true, carrier_contact_name, carrier_contact_phone
 3. Confirm the info was stored
-4. Thank them professionally
-5. Use the end_call function with reason='bid_placed' to end the call
+4. State clearly that no agreement was reached and the bid was only saved for follow-up
+5. Use the end_call function with reason='no_agreement' to end the call
 
 If no agreement is reached (carrier declines, bad fit, wrong location, etc.):
 1. Thank them for their time
@@ -165,7 +165,7 @@ If no agreement is reached (carrier declines, bad fit, wrong location, etc.):
 end_call function:
 Always use the end_call function when concluding a call:
 - reason='agreement' - After recording an agreement
-- reason='bid_placed' - After storing an above-max bid with contact info
+- reason='no_agreement' - Carrier declines, the load is a bad fit, or an above-max bid is stored for follow-up
 - reason='no_agreement' - Carrier declines (wrong location, bad fit, doesn't want it)
 - reason='load_not_found' - Unable to find load after 3-4 attempts
 - reason='mc_not_found' - Unable to verify MC number after 3 attempts

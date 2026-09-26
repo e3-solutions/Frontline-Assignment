@@ -1,0 +1,7 @@
+{
+  "scenario_id": "empty_trace",
+  "expected_pass": false,
+  "context": {},
+  "events": [],
+  "side_effects": []
+}
