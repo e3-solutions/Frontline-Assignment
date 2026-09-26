@@ -1,0 +1,11 @@
+{
+  "scenario_id": "below_goal_bad_counter",
+  "expected_pass": false,
+  "context": {"goal_rate": 1600, "ceiling_rate": 1800},
+  "events": [
+    {"type": "caller", "content": "I can do fifteen hundred."},
+    {"type": "assistant", "content": "Could you do fifteen twenty-five?"},
+    {"type": "decision", "name": "counteroffer", "arguments": {"amount": 1525, "carrier_bid": 1500}},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "no_agreement"}}
+  ]
+}

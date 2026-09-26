@@ -31,3 +31,15 @@ python -m pytest tests -v --tb=short
 ```
 
 The GitHub Actions workflow runs these functional checks with placeholder credentials. The tests and HTTP health endpoints do not establish that phone calls, speech providers, database writes, transfers, or quote submission work. Follow the [development call procedure](docs/LOCAL_SETUP.md#connect-a-development-phone-number) to qualify those integrations separately.
+
+## Voice-agent evaluations
+
+The credential-free evaluation suite and its design rationale live in [`voice-agent/evals/`](voice-agent/evals/README.md). It grades complete conversation/tool traces, includes passing and intentionally broken fixtures, and directly tests backend financial guardrails with mocked side effects. From `voice-agent/`, run:
+
+```bash
+python3 -m evals.runner --output evals/results/offline-report.json
+python3 -m unittest discover -s evals/stdlib_tests -v
+python3 -m pytest evals/tests tests ../shared/tests -q
+```
+
+The model critic is optional and requires explicitly supplied OpenAI credentials. The default evaluation does not contact any live service.

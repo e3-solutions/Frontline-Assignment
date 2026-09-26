@@ -1,0 +1,13 @@
+{
+  "scenario_id": "wrong_identity_rejected_blocked",
+  "expected_pass": true,
+  "context": {},
+  "events": [
+    {"type": "caller", "content": "My MC is 123456."},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "success", "carrier_name": "Wrong Carrier LLC"}},
+    {"type": "caller", "content": "No, that is not us."},
+    {"type": "identity_denied"},
+    {"type": "assistant", "content": "No worries. Please read the correct MC number."},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "no_agreement"}}
+  ]
+}

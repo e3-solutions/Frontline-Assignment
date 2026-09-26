@@ -1,0 +1,12 @@
+{
+  "scenario_id": "wrong_identity_rejected_used",
+  "expected_pass": false,
+  "context": {},
+  "events": [
+    {"type": "caller", "content": "No, that is not us."},
+    {"type": "identity_denied"},
+    {"type": "tool_call", "name": "get_load_context", "arguments": {"load_id": "LOAD-1234"}},
+    {"type": "assistant", "content": "I found the load."},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "no_agreement"}}
+  ]
+}

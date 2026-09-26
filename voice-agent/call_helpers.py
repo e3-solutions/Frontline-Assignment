@@ -28,6 +28,11 @@ from db_operations import (
     update_call_mc,
 )
 from load_context_utils import build_negotiation_prompt, normalize_load_data
+from negotiation_guardrails import (
+    identity_is_blocked,
+    validate_agreement_end,
+    validate_price_outcome,
+)
 from src import (
     NegotiationDBService,
     build_transfer_phone_number,
@@ -472,6 +477,7 @@ async def verify_carrier(
         # New verification → previous confirmation no longer reflects truth.
         context.carrier_identity_confirmed = False
         context.awaiting_carrier_identity_confirmation = True
+        context.carrier_identity_rejected = False
         inner = (
             carrier_data.get("data", carrier_data)
             if isinstance(carrier_data, dict)
@@ -534,6 +540,14 @@ async def get_load_context(
     # Suppress unused parameter warnings - these are required by Pipecat's function signature
     _ = function_name, tool_call_id, llm
     load_id = arguments.get("load_id", "").strip()
+
+    if identity_is_blocked(context):
+        await result_callback(json.dumps({
+            "status": "error",
+            "code": "CARRIER_IDENTITY_NOT_CONFIRMED",
+            "message": "Confirm the carrier identity before looking up a load.",
+        }))
+        return
 
     # Reject empty or obviously-bogus load_id up front. The LLM sometimes
     # emits get_load_context before the caller has actually given a
@@ -667,6 +681,14 @@ async def record_agreement(
     carrier_contact_name = arguments.get("carrier_contact_name")
     carrier_contact_phone = arguments.get("carrier_contact_phone")
 
+    if identity_is_blocked(context):
+        await result_callback(json.dumps({
+            "status": "error",
+            "code": "CARRIER_IDENTITY_NOT_CONFIRMED",
+            "message": "Cannot record an outcome until the carrier identity is confirmed",
+        }))
+        return
+
     # Use context values (stored by previous functions)
     load_uuid = getattr(context, "load_uuid", None)
     call_id = str(context.call_id) if hasattr(context, "call_id") else None
@@ -705,6 +727,25 @@ async def record_agreement(
         )
         return
 
+    load_context = getattr(context, "load_context", None) or {}
+    raw_max_rate = load_context.get("maxRate")
+    violation = validate_price_outcome(
+        price,
+        above_max=above_max,
+        raw_max_rate=raw_max_rate,
+    )
+    if violation:
+        await result_callback(
+            json.dumps(
+                {
+                    "status": "error",
+                    "code": violation.code,
+                    "message": violation.message,
+                }
+            )
+        )
+        return
+
     try:
         negotiation_id = save_agreement(
             load_uuid,
@@ -724,7 +765,6 @@ async def record_agreement(
             return
 
         if not above_max:
-            load_context = getattr(context, "load_context", None) or {}
             load_name = load_context.get("load_id") or ""
             caller_mc = getattr(context, "caller_mc", None)
             caller_phone = getattr(context, "caller_phone", None)
@@ -738,10 +778,14 @@ async def record_agreement(
             )
 
         msg = (
-            f"Above-max bid stored. We'll contact {carrier_contact_name} if conditions change."
+            f"Above-max bid stored for follow-up; no agreement was reached with {carrier_contact_name}."
             if above_max
             else f"Agreement recorded at ${price}"
         )
+        if above_max:
+            context.above_max_bid_recorded = True
+        else:
+            context.agreement_recorded = True
         logger.info(
             f"{'Above-max bid' if above_max else 'Agreement'}: ${price}"
             + (f" from {carrier_contact_name}" if above_max else "")
@@ -813,7 +857,6 @@ async def end_call(
         "error",
         "load_not_found",
         "mc_not_found",
-        "bid_placed",
     ]
     if not reason or reason not in valid_reasons:
         result = {
@@ -821,6 +864,23 @@ async def end_call(
             "message": f"Invalid reason. Must be one of: {', '.join(valid_reasons)}",
         }
         await result_callback(json.dumps(result))
+        return
+
+    violation = None
+    if reason == "agreement":
+        violation = validate_agreement_end(
+            agreement_recorded=getattr(context, "agreement_recorded", False)
+        )
+    if violation:
+        await result_callback(
+            json.dumps(
+                {
+                    "status": "error",
+                    "code": violation.code,
+                    "message": violation.message,
+                }
+            )
+        )
         return
 
     try:

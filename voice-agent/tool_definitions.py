@@ -80,7 +80,7 @@ END_CALL_FUNCTION = FunctionSchema(
     name="end_call",
     description=(
         "End the call with a specific reason. Use 'agreement' after recording a deal, "
-        "'bid_placed' after storing an above-max bid, 'no_agreement' when carrier "
+        "'no_agreement' after storing an above-max bid or when carrier "
         "declines (bad fit, wrong location, etc.), 'load_not_found'/'mc_not_found' "
         "for lookup failures, 'abrupt' for disconnects, 'error' for technical issues."
     ),
@@ -91,7 +91,6 @@ END_CALL_FUNCTION = FunctionSchema(
                 "abrupt",
                 "agreement",
                 "no_agreement",
-                "bid_placed",
                 "error",
                 "load_not_found",
                 "mc_not_found",

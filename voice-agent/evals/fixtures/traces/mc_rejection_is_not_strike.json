@@ -1,0 +1,14 @@
+{
+  "scenario_id": "three_mc_not_found_rejection_not_strike",
+  "expected_pass": false,
+  "context": {},
+  "events": [
+    {"type": "caller", "content": "Try 111111."},
+    {"type": "assistant", "content": "Let me check that."},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "not_found"}},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "success", "carrier_name": "Wrong Carrier"}},
+    {"type": "identity_denied"},
+    {"type": "tool_result", "name": "verify_carrier", "result": {"status": "not_found"}},
+    {"type": "tool_call", "name": "end_call", "arguments": {"reason": "mc_not_found"}}
+  ]
+}
