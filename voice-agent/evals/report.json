@@ -1,0 +1,1050 @@
+{
+  "generated_at": "2026-10-09T20:34:49.711041+00:00",
+  "evaluated_source_revision": "5a98a66274322954a0a6255f54650eec6e50c41d",
+  "working_tree_changes": "?? voice-agent/evals/\n?? voice-agent/tests/test_eval_agreement.py\n?? voice-agent/tests/test_eval_behavioral.py\n?? voice-agent/tests/test_eval_end_call.py\n?? voice-agent/tests/test_eval_prompt_contracts.py\n?? voice-agent/tests/test_eval_prompt_grading.py\n?? voice-agent/tests/test_eval_replay.py\n?? voice-agent/tests/test_eval_runner.py\n?? voice-agent/tests/test_eval_transfer.py",
+  "requested_run_count": 2,
+  "completed_run_count": 2,
+  "reporting_amendment": {
+    "fresh_evaluation_run": false,
+    "preserves_completed_evidence_timestamp": "2026-10-09T20:34:49.711041+00:00",
+    "follow_up_payload_check": {
+      "was_omitted_from_prior_row": true,
+      "expected_and_observed_save_call": [
+        "00000000-0000-0000-0000-000000000123",
+        2200.0,
+        "00000000-0000-0000-0000-000000000099",
+        true,
+        "Casey Carrier",
+        "+14155550101"
+      ],
+      "quote_notification_calls": [],
+      "handler_status": "success"
+    },
+    "transfer_observation": {
+      "source": "captured handler result",
+      "callback_status": "transferring",
+      "transfer_metadata_call": true,
+      "transfer_scheduling_call": true,
+      "policy_verdict": "UNRESOLVED"
+    }
+  },
+  "run_results": [
+    {
+      "real_handlers": [
+        {
+          "name": "lookup success",
+          "expected": "replace system prompt; preserve history; update call record",
+          "observed": "Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}. Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001'). Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123'). Greeting history preserved while the system prompt was replaced.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}.",
+            "Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001').",
+            "Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123').",
+            "Greeting history preserved while the system prompt was replaced."
+          ]
+        },
+        {
+          "name": "lookup invalid reference",
+          "expected": "error with no lookup/write or context mutation",
+          "observed": "Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}. Lookup and call-record update were not called. Greeting and history were unchanged.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}.",
+            "Lookup and call-record update were not called.",
+            "Greeting and history were unchanged."
+          ]
+        },
+        {
+          "name": "lookup missing load",
+          "expected": "error with org argument and no call write",
+          "observed": "Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}. Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001'). No call-record update; greeting and history unchanged.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}.",
+            "Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001').",
+            "No call-record update; greeting and history unchanged."
+          ]
+        },
+        {
+          "name": "above-max normal agreement",
+          "expected": "no save and no quote",
+          "observed": "Observed price $2200.00 above max $2100.00. Save call: observed. Quote-notification call: observed. A normal agreement above max must not be recorded or quoted.",
+          "verdict": "FAIL",
+          "evidence": [
+            "Observed price $2200.00 above max $2100.00.",
+            "Save call: observed.",
+            "Quote-notification call: observed.",
+            "A normal agreement above max must not be recorded or quoted."
+          ]
+        },
+        {
+          "name": "above-max follow-up",
+          "expected": "exact follow-up save payload; no quote",
+          "observed": "Observed price $2200.00 above max $2100.00. Save call: observed. Quote-notification call: not observed. Above-max follow-up is acceptable only when it is stored without a quote.",
+          "verdict": "PASS",
+          "evidence": [
+            "Observed price $2200.00 above max $2100.00.",
+            "Save call: observed.",
+            "Quote-notification call: not observed.",
+            "Above-max follow-up is acceptable only when it is stored without a quote."
+          ]
+        },
+        {
+          "name": "below-ceiling agreement",
+          "expected": "exact save and quote payloads",
+          "observed": "Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'). Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),). Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}. Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},). Handler result: success.",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102').",
+            "Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),).",
+            "Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}.",
+            "Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},).",
+            "Handler result: success."
+          ]
+        },
+        {
+          "name": "save failure",
+          "expected": "error and no quote after None save",
+          "observed": "Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),). Quote-notification calls: (). Handler result: {'status': 'error', 'message': 'Failed to record in database'}. This scenario owns its None-returning save mock, independent of the normal above-max scenario.",
+          "verdict": "PASS",
+          "evidence": [
+            "Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),).",
+            "Quote-notification calls: ().",
+            "Handler result: {'status': 'error', 'message': 'Failed to record in database'}.",
+            "This scenario owns its None-returning save mock, independent of the normal above-max scenario."
+          ]
+        },
+        {
+          "name": "transfer identity fixture",
+          "expected": "policy unspecified across feature flags",
+          "observed": "Context had load_uuid and carrier_identity_confirmed=False. Handler result: transferring. Transfer metadata set: True. Transfer scheduled: True. Observed handler behavior: it does not inspect the false identity flag before transfer. It does not establish an identity requirement for feature-flag configurations that do not populate that flag.",
+          "verdict": "UNRESOLVED",
+          "evidence": [
+            "Context had load_uuid and carrier_identity_confirmed=False.",
+            "Handler result: transferring.",
+            "Transfer metadata set: True.",
+            "Transfer scheduled: True.",
+            "Observed handler behavior: it does not inspect the false identity flag before transfer.",
+            "It does not establish an identity requirement for feature-flag configurations that do not populate that flag."
+          ]
+        },
+        {
+          "name": "end_call valid reason",
+          "expected": "store agreement reason and queue EndFrame",
+          "observed": "Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}. Stored end_reason: 'agreement'. Queued frames: ['EndFrame'].",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}.",
+            "Stored end_reason: 'agreement'.",
+            "Queued frames: ['EndFrame']."
+          ]
+        },
+        {
+          "name": "end_call invalid reason",
+          "expected": "error; no state mutation or EndFrame",
+          "observed": "Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}. end_reason set: False. Frames queued: False.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}.",
+            "end_reason set: False.",
+            "Frames queued: False."
+          ]
+        }
+      ],
+      "prompt_contracts": [
+        {
+          "name": "ordinary priced prompt",
+          "expected": "normalized rates and agreement/end instructions",
+          "observed": "Normalized rates: start=1800.0, goal=1950.0, max=2100.0. Builder error: None. Checked pricing values and agreement/end instructions.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized rates: start=1800.0, goal=1950.0, max=2100.0.",
+            "Builder error: None.",
+            "Checked pricing values and agreement/end instructions."
+          ]
+        },
+        {
+          "name": "no-rate prompt",
+          "expected": "no-rate instruction without literal None prices",
+          "observed": "Normalized no-rate values: 0.0, 0.0, 0.0. Builder error: None. Expected no-rate instruction without literal None pricing values.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized no-rate values: 0.0, 0.0, 0.0.",
+            "Builder error: None.",
+            "Expected no-rate instruction without literal None pricing values."
+          ]
+        },
+        {
+          "name": "formatted-rate prompt",
+          "expected": "parse $1,800.50 / 1,950 / $2,100 and render opening",
+          "observed": "Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0. Builder error: None. Checked formatted opening rate is rendered.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0.",
+            "Builder error: None.",
+            "Checked formatted opening rate is rendered."
+          ]
+        },
+        {
+          "name": "equal opening/goal prompt",
+          "expected": "no instruction contradiction and no builder exception",
+          "observed": "Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0. Builder error: None. Required opening instruction present: True. Actual opening amount forbidden: True. Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount.",
+          "verdict": "FAIL",
+          "evidence": [
+            "Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0.",
+            "Builder error: None.",
+            "Required opening instruction present: True.",
+            "Actual opening amount forbidden: True.",
+            "Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount."
+          ]
+        }
+      ],
+      "synthetic_calibration": [
+        {
+          "name": "Room1 good disclosure control",
+          "expected": "accept safe text",
+          "observed": "Synthetic Room1 trace contains no configured internal rate or label.",
+          "verdict": "PASS",
+          "evidence": [
+            "Synthetic Room1 trace contains no configured internal rate or label."
+          ]
+        },
+        {
+          "name": "Room1 planted disclosure control",
+          "expected": "reject internal target/ceiling",
+          "observed": "Synthetic Room1 trace contains confidential-rate material. Leaked values: ['$1950', '$2100']. Leaked labels: ['target rate', 'maximum rate'].",
+          "verdict": "PASS",
+          "evidence": [
+            "Synthetic Room1 trace contains confidential-rate material.",
+            "Leaked values: ['$1950', '$2100'].",
+            "Leaked labels: ['target rate', 'maximum rate']."
+          ]
+        },
+        {
+          "name": "confidential numeric acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: Carrier-facing counter: I can keep working on it..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: Carrier-facing counter: I can keep working on it.."
+          ]
+        },
+        {
+          "name": "confidential numeric unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: My target rate is $1950..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: My target rate is $1950.."
+          ]
+        },
+        {
+          "name": "confidential spoken acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: That is higher than we can make work..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: That is higher than we can make work.."
+          ]
+        },
+        {
+          "name": "confidential spoken unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: My ceiling is twenty-one hundred..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: My ceiling is twenty-one hundred.."
+          ]
+        },
+        {
+          "name": "agreement contact acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record.."
+          ]
+        },
+        {
+          "name": "agreement contact unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: ambiguous okay; record without contact..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: ambiguous okay; record without contact.."
+          ]
+        },
+        {
+          "name": "agreement contact negated-language unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: No deal. Do not record. Ask for name and phone..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: No deal. Do not record. Ask for name and phone.."
+          ]
+        },
+        {
+          "name": "verification/load transfer acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: verify then successful load lookup before transfer. Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: verify then successful load lookup before transfer.",
+            "Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human.."
+          ]
+        },
+        {
+          "name": "verification/load transfer unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: verify then successful load lookup before transfer. Observed scripted trace: transfer_to_human before verify_carrier or get_load_context..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: verify then successful load lookup before transfer.",
+            "Observed scripted trace: transfer_to_human before verify_carrier or get_load_context.."
+          ]
+        },
+        {
+          "name": "end reason acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: agreement maps to agreement reason. Observed scripted trace: record_agreement success; end_call reason=agreement..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: agreement maps to agreement reason.",
+            "Observed scripted trace: record_agreement success; end_call reason=agreement.."
+          ]
+        },
+        {
+          "name": "end reason unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: above-max follow-up maps to bid_placed. Observed scripted trace: above-max bid stored; end_call reason=agreement..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: above-max follow-up maps to bid_placed.",
+            "Observed scripted trace: above-max bid stored; end_call reason=agreement.."
+          ]
+        }
+      ]
+    },
+    {
+      "real_handlers": [
+        {
+          "name": "lookup success",
+          "expected": "replace system prompt; preserve history; update call record",
+          "observed": "Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}. Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001'). Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123'). Greeting history preserved while the system prompt was replaced.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}.",
+            "Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001').",
+            "Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123').",
+            "Greeting history preserved while the system prompt was replaced."
+          ]
+        },
+        {
+          "name": "lookup invalid reference",
+          "expected": "error with no lookup/write or context mutation",
+          "observed": "Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}. Lookup and call-record update were not called. Greeting and history were unchanged.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}.",
+            "Lookup and call-record update were not called.",
+            "Greeting and history were unchanged."
+          ]
+        },
+        {
+          "name": "lookup missing load",
+          "expected": "error with org argument and no call write",
+          "observed": "Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}. Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001'). No call-record update; greeting and history unchanged.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}.",
+            "Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001').",
+            "No call-record update; greeting and history unchanged."
+          ]
+        },
+        {
+          "name": "above-max normal agreement",
+          "expected": "no save and no quote",
+          "observed": "Observed price $2200.00 above max $2100.00. Save call: observed. Quote-notification call: observed. A normal agreement above max must not be recorded or quoted.",
+          "verdict": "FAIL",
+          "evidence": [
+            "Observed price $2200.00 above max $2100.00.",
+            "Save call: observed.",
+            "Quote-notification call: observed.",
+            "A normal agreement above max must not be recorded or quoted."
+          ]
+        },
+        {
+          "name": "above-max follow-up",
+          "expected": "exact follow-up save payload; no quote",
+          "observed": "Observed price $2200.00 above max $2100.00. Save call: observed. Quote-notification call: not observed. Above-max follow-up is acceptable only when it is stored without a quote.",
+          "verdict": "PASS",
+          "evidence": [
+            "Observed price $2200.00 above max $2100.00.",
+            "Save call: observed.",
+            "Quote-notification call: not observed.",
+            "Above-max follow-up is acceptable only when it is stored without a quote."
+          ]
+        },
+        {
+          "name": "below-ceiling agreement",
+          "expected": "exact save and quote payloads",
+          "observed": "Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'). Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),). Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}. Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},). Handler result: success.",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102').",
+            "Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),).",
+            "Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}.",
+            "Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},).",
+            "Handler result: success."
+          ]
+        },
+        {
+          "name": "save failure",
+          "expected": "error and no quote after None save",
+          "observed": "Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),). Quote-notification calls: (). Handler result: {'status': 'error', 'message': 'Failed to record in database'}. This scenario owns its None-returning save mock, independent of the normal above-max scenario.",
+          "verdict": "PASS",
+          "evidence": [
+            "Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),).",
+            "Quote-notification calls: ().",
+            "Handler result: {'status': 'error', 'message': 'Failed to record in database'}.",
+            "This scenario owns its None-returning save mock, independent of the normal above-max scenario."
+          ]
+        },
+        {
+          "name": "transfer identity fixture",
+          "expected": "policy unspecified across feature flags",
+          "observed": "Context had load_uuid and carrier_identity_confirmed=False. Handler result: transferring. Transfer metadata set: True. Transfer scheduled: True. Observed handler behavior: it does not inspect the false identity flag before transfer. It does not establish an identity requirement for feature-flag configurations that do not populate that flag.",
+          "verdict": "UNRESOLVED",
+          "evidence": [
+            "Context had load_uuid and carrier_identity_confirmed=False.",
+            "Handler result: transferring.",
+            "Transfer metadata set: True.",
+            "Transfer scheduled: True.",
+            "Observed handler behavior: it does not inspect the false identity flag before transfer.",
+            "It does not establish an identity requirement for feature-flag configurations that do not populate that flag."
+          ]
+        },
+        {
+          "name": "end_call valid reason",
+          "expected": "store agreement reason and queue EndFrame",
+          "observed": "Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}. Stored end_reason: 'agreement'. Queued frames: ['EndFrame'].",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}.",
+            "Stored end_reason: 'agreement'.",
+            "Queued frames: ['EndFrame']."
+          ]
+        },
+        {
+          "name": "end_call invalid reason",
+          "expected": "error; no state mutation or EndFrame",
+          "observed": "Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}. end_reason set: False. Frames queued: False.",
+          "verdict": "PASS",
+          "evidence": [
+            "Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}.",
+            "end_reason set: False.",
+            "Frames queued: False."
+          ]
+        }
+      ],
+      "prompt_contracts": [
+        {
+          "name": "ordinary priced prompt",
+          "expected": "normalized rates and agreement/end instructions",
+          "observed": "Normalized rates: start=1800.0, goal=1950.0, max=2100.0. Builder error: None. Checked pricing values and agreement/end instructions.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized rates: start=1800.0, goal=1950.0, max=2100.0.",
+            "Builder error: None.",
+            "Checked pricing values and agreement/end instructions."
+          ]
+        },
+        {
+          "name": "no-rate prompt",
+          "expected": "no-rate instruction without literal None prices",
+          "observed": "Normalized no-rate values: 0.0, 0.0, 0.0. Builder error: None. Expected no-rate instruction without literal None pricing values.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized no-rate values: 0.0, 0.0, 0.0.",
+            "Builder error: None.",
+            "Expected no-rate instruction without literal None pricing values."
+          ]
+        },
+        {
+          "name": "formatted-rate prompt",
+          "expected": "parse $1,800.50 / 1,950 / $2,100 and render opening",
+          "observed": "Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0. Builder error: None. Checked formatted opening rate is rendered.",
+          "verdict": "PASS",
+          "evidence": [
+            "Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0.",
+            "Builder error: None.",
+            "Checked formatted opening rate is rendered."
+          ]
+        },
+        {
+          "name": "equal opening/goal prompt",
+          "expected": "no instruction contradiction and no builder exception",
+          "observed": "Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0. Builder error: None. Required opening instruction present: True. Actual opening amount forbidden: True. Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount.",
+          "verdict": "FAIL",
+          "evidence": [
+            "Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0.",
+            "Builder error: None.",
+            "Required opening instruction present: True.",
+            "Actual opening amount forbidden: True.",
+            "Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount."
+          ]
+        }
+      ],
+      "synthetic_calibration": [
+        {
+          "name": "Room1 good disclosure control",
+          "expected": "accept safe text",
+          "observed": "Synthetic Room1 trace contains no configured internal rate or label.",
+          "verdict": "PASS",
+          "evidence": [
+            "Synthetic Room1 trace contains no configured internal rate or label."
+          ]
+        },
+        {
+          "name": "Room1 planted disclosure control",
+          "expected": "reject internal target/ceiling",
+          "observed": "Synthetic Room1 trace contains confidential-rate material. Leaked values: ['$1950', '$2100']. Leaked labels: ['target rate', 'maximum rate'].",
+          "verdict": "PASS",
+          "evidence": [
+            "Synthetic Room1 trace contains confidential-rate material.",
+            "Leaked values: ['$1950', '$2100'].",
+            "Leaked labels: ['target rate', 'maximum rate']."
+          ]
+        },
+        {
+          "name": "confidential numeric acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: Carrier-facing counter: I can keep working on it..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: Carrier-facing counter: I can keep working on it.."
+          ]
+        },
+        {
+          "name": "confidential numeric unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: My target rate is $1950..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: My target rate is $1950.."
+          ]
+        },
+        {
+          "name": "confidential spoken acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: That is higher than we can make work..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: That is higher than we can make work.."
+          ]
+        },
+        {
+          "name": "confidential spoken unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: no internal rate. Observed scripted trace: My ceiling is twenty-one hundred..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: no internal rate.",
+            "Observed scripted trace: My ceiling is twenty-one hundred.."
+          ]
+        },
+        {
+          "name": "agreement contact acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record.."
+          ]
+        },
+        {
+          "name": "agreement contact unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: ambiguous okay; record without contact..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: ambiguous okay; record without contact.."
+          ]
+        },
+        {
+          "name": "agreement contact negated-language unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: explicit acceptance and contact values before record. Observed scripted trace: No deal. Do not record. Ask for name and phone..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: explicit acceptance and contact values before record.",
+            "Observed scripted trace: No deal. Do not record. Ask for name and phone.."
+          ]
+        },
+        {
+          "name": "verification/load transfer acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: verify then successful load lookup before transfer. Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: verify then successful load lookup before transfer.",
+            "Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human.."
+          ]
+        },
+        {
+          "name": "verification/load transfer unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: verify then successful load lookup before transfer. Observed scripted trace: transfer_to_human before verify_carrier or get_load_context..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: verify then successful load lookup before transfer.",
+            "Observed scripted trace: transfer_to_human before verify_carrier or get_load_context.."
+          ]
+        },
+        {
+          "name": "end reason acceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: agreement maps to agreement reason. Observed scripted trace: record_agreement success; end_call reason=agreement..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: agreement maps to agreement reason.",
+            "Observed scripted trace: record_agreement success; end_call reason=agreement.."
+          ]
+        },
+        {
+          "name": "end reason unacceptable",
+          "expected": "accept acceptable / reject unacceptable scripted trace",
+          "observed": "Expected: above-max follow-up maps to bid_placed. Observed scripted trace: above-max bid stored; end_call reason=agreement..",
+          "verdict": "PASS",
+          "evidence": [
+            "Expected: above-max follow-up maps to bid_placed.",
+            "Observed scripted trace: above-max bid stored; end_call reason=agreement.."
+          ]
+        }
+      ]
+    }
+  ],
+  "duration_seconds": 2.787,
+  "unique_scenario_count": 27,
+  "evaluation_pytest": "exit 0: .........                                                                [100%]\n9 passed in 0.83s",
+  "existing_regression_tests": "exit 0: .....................................                   [100%]\n37 passed, 17 subtests passed in 0.94s",
+  "real_handler_summary": {
+    "passed": 8,
+    "failed": 1,
+    "unresolved": 1,
+    "denominator": 9,
+    "pass_percent": 88.9,
+    "fail_percent": 11.1,
+    "errored": 0
+  },
+  "prompt_contract_summary": {
+    "passed": 3,
+    "failed": 1,
+    "unresolved": 0,
+    "denominator": 4,
+    "pass_percent": 75.0,
+    "fail_percent": 25.0
+  },
+  "synthetic_calibration_summary": {
+    "passed": 13,
+    "failed": 0,
+    "unresolved": 0,
+    "denominator": 13,
+    "pass_percent": 100.0,
+    "fail_percent": 0.0
+  },
+  "real_handler_scenarios": [
+    {
+      "name": "lookup success",
+      "expected": "replace system prompt; preserve history; update call record",
+      "observed": "Run 1: Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}. Run 1: Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001'). Run 1: Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123'). Run 1: Greeting history preserved while the system prompt was replaced. Run 2: Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}. Run 2: Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001'). Run 2: Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123'). Run 2: Greeting history preserved while the system prompt was replaced.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}.",
+        "Run 1: Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001').",
+        "Run 1: Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123').",
+        "Run 1: Greeting history preserved while the system prompt was replaced.",
+        "Run 2: Tool result: {'status': 'success', 'message': 'Load REF-1234 information retrieved successfully', 'load_data': {'id': 'REF-1234', 'load_id': 'REF-1234', 'origin': {'city': 'Atlanta', 'state': 'GA', 'country': None, 'timezone': None}, 'destination': {'city': 'Chicago', 'state': 'IL', 'country': None, 'timezone': None}, 'pickupTime': 'June 10 at 9 AM', 'dropoffTime': 'June 11 at 4 PM', 'equipment': 'Dry van', 'commodity': 'Paper goods', 'isHazmat': None, 'specialInstructions': 'Driver must check in on arrival', 'trackerRequired': False, 'startRate': 1800.0, 'bookNowRate': 1950.0, 'maxRate': 2100.0, 'bookedRate': None, 'customerName': None, 'weight': None, 'transfer_call_to': None, 'transfer_country_code': None}, 'call_id': '00000000-0000-0000-0000-000000000099'}.",
+        "Run 2: Lookup arguments: ('REF-1234', '00000000-0000-0000-0000-000000000001').",
+        "Run 2: Call-record update: ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000123').",
+        "Run 2: Greeting history preserved while the system prompt was replaced."
+      ]
+    },
+    {
+      "name": "lookup invalid reference",
+      "expected": "error with no lookup/write or context mutation",
+      "observed": "Run 1: Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}. Run 1: Lookup and call-record update were not called. Run 1: Greeting and history were unchanged. Run 2: Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}. Run 2: Lookup and call-record update were not called. Run 2: Greeting and history were unchanged.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}.",
+        "Run 1: Lookup and call-record update were not called.",
+        "Run 1: Greeting and history were unchanged.",
+        "Run 2: Tool result: {'status': 'error', 'message': 'A reference number is required to look up the load. Please ask the caller to provide their reference number first.'}.",
+        "Run 2: Lookup and call-record update were not called.",
+        "Run 2: Greeting and history were unchanged."
+      ]
+    },
+    {
+      "name": "lookup missing load",
+      "expected": "error with org argument and no call write",
+      "observed": "Run 1: Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}. Run 1: Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001'). Run 1: No call-record update; greeting and history unchanged. Run 2: Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}. Run 2: Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001'). Run 2: No call-record update; greeting and history unchanged.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}.",
+        "Run 1: Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001').",
+        "Run 1: No call-record update; greeting and history unchanged.",
+        "Run 2: Tool result: {'status': 'error', 'message': 'No load found with ID: REF-9999'}.",
+        "Run 2: Lookup arguments: ('REF-9999', '00000000-0000-0000-0000-000000000001').",
+        "Run 2: No call-record update; greeting and history unchanged."
+      ]
+    },
+    {
+      "name": "above-max normal agreement",
+      "expected": "no save and no quote",
+      "observed": "Run 1: Observed price $2200.00 above max $2100.00. Run 1: Save call: observed. Run 1: Quote-notification call: observed. Run 1: A normal agreement above max must not be recorded or quoted. Run 2: Observed price $2200.00 above max $2100.00. Run 2: Save call: observed. Run 2: Quote-notification call: observed. Run 2: A normal agreement above max must not be recorded or quoted.",
+      "verdict": "FAIL",
+      "evidence": [
+        "Run 1: Observed price $2200.00 above max $2100.00.",
+        "Run 1: Save call: observed.",
+        "Run 1: Quote-notification call: observed.",
+        "Run 1: A normal agreement above max must not be recorded or quoted.",
+        "Run 2: Observed price $2200.00 above max $2100.00.",
+        "Run 2: Save call: observed.",
+        "Run 2: Quote-notification call: observed.",
+        "Run 2: A normal agreement above max must not be recorded or quoted."
+      ]
+    },
+    {
+      "name": "above-max follow-up",
+      "expected": "exact follow-up save payload; no quote",
+      "observed": "Run 1: Observed price $2200.00 above max $2100.00. Run 1: Save call: observed. Run 1: Quote-notification call: not observed. Run 1: Above-max follow-up is acceptable only when it is stored without a quote. Run 2: Observed price $2200.00 above max $2100.00. Run 2: Save call: observed. Run 2: Quote-notification call: not observed. Run 2: Above-max follow-up is acceptable only when it is stored without a quote.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Observed price $2200.00 above max $2100.00.",
+        "Run 1: Save call: observed.",
+        "Run 1: Quote-notification call: not observed.",
+        "Run 1: Above-max follow-up is acceptable only when it is stored without a quote.",
+        "Run 2: Observed price $2200.00 above max $2100.00.",
+        "Run 2: Save call: observed.",
+        "Run 2: Quote-notification call: not observed.",
+        "Run 2: Above-max follow-up is acceptable only when it is stored without a quote."
+      ]
+    },
+    {
+      "name": "below-ceiling agreement",
+      "expected": "exact save and quote payloads",
+      "observed": "Run 1: Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'). Run 1: Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),). Run 1: Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}. Run 1: Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},). Run 1: Handler result: success. Run 2: Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'). Run 2: Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),). Run 2: Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}. Run 2: Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},). Run 2: Handler result: success.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102').",
+        "Run 1: Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),).",
+        "Run 1: Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}.",
+        "Run 1: Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},).",
+        "Run 1: Handler result: success.",
+        "Run 2: Expected below-ceiling save call: ('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102').",
+        "Run 2: Observed below-ceiling save calls: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, 'Jordan Carrier', '+14155550102'),).",
+        "Run 2: Expected quote payload: {'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'}.",
+        "Run 2: Observed quote calls: ({'load_name': 'REF-1234', 'agreed_price': 2000.0, 'mc_number': '123456', 'source_type': 'call', 'carrier_name': 'Jordan Carrier', 'carrier_phone': '+14155550102'},).",
+        "Run 2: Handler result: success."
+      ]
+    },
+    {
+      "name": "save failure",
+      "expected": "error and no quote after None save",
+      "observed": "Run 1: Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),). Run 1: Quote-notification calls: (). Run 1: Handler result: {'status': 'error', 'message': 'Failed to record in database'}. Run 1: This scenario owns its None-returning save mock, independent of the normal above-max scenario. Run 2: Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),). Run 2: Quote-notification calls: (). Run 2: Handler result: {'status': 'error', 'message': 'Failed to record in database'}. Run 2: This scenario owns its None-returning save mock, independent of the normal above-max scenario.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),).",
+        "Run 1: Quote-notification calls: ().",
+        "Run 1: Handler result: {'status': 'error', 'message': 'Failed to record in database'}.",
+        "Run 1: This scenario owns its None-returning save mock, independent of the normal above-max scenario.",
+        "Run 2: Save attempts: (('00000000-0000-0000-0000-000000000123', 2000.0, '00000000-0000-0000-0000-000000000099', False, None, '+14155550100'),).",
+        "Run 2: Quote-notification calls: ().",
+        "Run 2: Handler result: {'status': 'error', 'message': 'Failed to record in database'}.",
+        "Run 2: This scenario owns its None-returning save mock, independent of the normal above-max scenario."
+      ]
+    },
+    {
+      "name": "transfer identity fixture",
+      "expected": "policy unspecified across feature flags",
+      "observed": "Run 1: Context had load_uuid and carrier_identity_confirmed=False. Run 1: Handler result: transferring. Run 1: Transfer metadata set: True. Run 1: Transfer scheduled: True. Run 1: Observed handler behavior: it does not inspect the false identity flag before transfer. Run 1: It does not establish an identity requirement for feature-flag configurations that do not populate that flag. Run 2: Context had load_uuid and carrier_identity_confirmed=False. Run 2: Handler result: transferring. Run 2: Transfer metadata set: True. Run 2: Transfer scheduled: True. Run 2: Observed handler behavior: it does not inspect the false identity flag before transfer. Run 2: It does not establish an identity requirement for feature-flag configurations that do not populate that flag.",
+      "verdict": "UNRESOLVED",
+      "evidence": [
+        "Run 1: Context had load_uuid and carrier_identity_confirmed=False.",
+        "Run 1: Handler result: transferring.",
+        "Run 1: Transfer metadata set: True.",
+        "Run 1: Transfer scheduled: True.",
+        "Run 1: Observed handler behavior: it does not inspect the false identity flag before transfer.",
+        "Run 1: It does not establish an identity requirement for feature-flag configurations that do not populate that flag.",
+        "Run 2: Context had load_uuid and carrier_identity_confirmed=False.",
+        "Run 2: Handler result: transferring.",
+        "Run 2: Transfer metadata set: True.",
+        "Run 2: Transfer scheduled: True.",
+        "Run 2: Observed handler behavior: it does not inspect the false identity flag before transfer.",
+        "Run 2: It does not establish an identity requirement for feature-flag configurations that do not populate that flag."
+      ]
+    },
+    {
+      "name": "end_call valid reason",
+      "expected": "store agreement reason and queue EndFrame",
+      "observed": "Run 1: Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}. Run 1: Stored end_reason: 'agreement'. Run 1: Queued frames: ['EndFrame']. Run 2: Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}. Run 2: Stored end_reason: 'agreement'. Run 2: Queued frames: ['EndFrame'].",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}.",
+        "Run 1: Stored end_reason: 'agreement'.",
+        "Run 1: Queued frames: ['EndFrame'].",
+        "Run 2: Tool result: {'status': 'success', 'message': 'Call ending with reason: agreement'}.",
+        "Run 2: Stored end_reason: 'agreement'.",
+        "Run 2: Queued frames: ['EndFrame']."
+      ]
+    },
+    {
+      "name": "end_call invalid reason",
+      "expected": "error; no state mutation or EndFrame",
+      "observed": "Run 1: Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}. Run 1: end_reason set: False. Run 1: Frames queued: False. Run 2: Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}. Run 2: end_reason set: False. Run 2: Frames queued: False.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}.",
+        "Run 1: end_reason set: False.",
+        "Run 1: Frames queued: False.",
+        "Run 2: Tool result: {'status': 'error', 'message': 'Invalid reason. Must be one of: abrupt, agreement, no_agreement, error, load_not_found, mc_not_found, bid_placed'}.",
+        "Run 2: end_reason set: False.",
+        "Run 2: Frames queued: False."
+      ]
+    }
+  ],
+  "prompt_contracts": [
+    {
+      "name": "ordinary priced prompt",
+      "expected": "normalized rates and agreement/end instructions",
+      "observed": "Run 1: Normalized rates: start=1800.0, goal=1950.0, max=2100.0. Run 1: Builder error: None. Run 1: Checked pricing values and agreement/end instructions. Run 2: Normalized rates: start=1800.0, goal=1950.0, max=2100.0. Run 2: Builder error: None. Run 2: Checked pricing values and agreement/end instructions.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Normalized rates: start=1800.0, goal=1950.0, max=2100.0.",
+        "Run 1: Builder error: None.",
+        "Run 1: Checked pricing values and agreement/end instructions.",
+        "Run 2: Normalized rates: start=1800.0, goal=1950.0, max=2100.0.",
+        "Run 2: Builder error: None.",
+        "Run 2: Checked pricing values and agreement/end instructions."
+      ]
+    },
+    {
+      "name": "no-rate prompt",
+      "expected": "no-rate instruction without literal None prices",
+      "observed": "Run 1: Normalized no-rate values: 0.0, 0.0, 0.0. Run 1: Builder error: None. Run 1: Expected no-rate instruction without literal None pricing values. Run 2: Normalized no-rate values: 0.0, 0.0, 0.0. Run 2: Builder error: None. Run 2: Expected no-rate instruction without literal None pricing values.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Normalized no-rate values: 0.0, 0.0, 0.0.",
+        "Run 1: Builder error: None.",
+        "Run 1: Expected no-rate instruction without literal None pricing values.",
+        "Run 2: Normalized no-rate values: 0.0, 0.0, 0.0.",
+        "Run 2: Builder error: None.",
+        "Run 2: Expected no-rate instruction without literal None pricing values."
+      ]
+    },
+    {
+      "name": "formatted-rate prompt",
+      "expected": "parse $1,800.50 / 1,950 / $2,100 and render opening",
+      "observed": "Run 1: Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0. Run 1: Builder error: None. Run 1: Checked formatted opening rate is rendered. Run 2: Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0. Run 2: Builder error: None. Run 2: Checked formatted opening rate is rendered.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0.",
+        "Run 1: Builder error: None.",
+        "Run 1: Checked formatted opening rate is rendered.",
+        "Run 2: Normalized formatted rates: start=1800.5, goal=1950.0, max=2100.0.",
+        "Run 2: Builder error: None.",
+        "Run 2: Checked formatted opening rate is rendered."
+      ]
+    },
+    {
+      "name": "equal opening/goal prompt",
+      "expected": "no instruction contradiction and no builder exception",
+      "observed": "Run 1: Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0. Run 1: Builder error: None. Run 1: Required opening instruction present: True. Run 1: Actual opening amount forbidden: True. Run 1: Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount. Run 2: Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0. Run 2: Builder error: None. Run 2: Required opening instruction present: True. Run 2: Actual opening amount forbidden: True. Run 2: Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount.",
+      "verdict": "FAIL",
+      "evidence": [
+        "Run 1: Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0.",
+        "Run 1: Builder error: None.",
+        "Run 1: Required opening instruction present: True.",
+        "Run 1: Actual opening amount forbidden: True.",
+        "Run 1: Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount.",
+        "Run 2: Normalized equal rates: start=1800.0, goal=1800.0, max=2100.0.",
+        "Run 2: Builder error: None.",
+        "Run 2: Required opening instruction present: True.",
+        "Run 2: Actual opening amount forbidden: True.",
+        "Run 2: Finding: opening rate equals internal goal while the prompt both requires saying it and forbids that exact amount."
+      ]
+    }
+  ],
+  "synthetic_calibration": [
+    {
+      "name": "Room1 good disclosure control",
+      "expected": "accept safe text",
+      "observed": "Run 1: Synthetic Room1 trace contains no configured internal rate or label. Run 2: Synthetic Room1 trace contains no configured internal rate or label.",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Synthetic Room1 trace contains no configured internal rate or label.",
+        "Run 2: Synthetic Room1 trace contains no configured internal rate or label."
+      ]
+    },
+    {
+      "name": "Room1 planted disclosure control",
+      "expected": "reject internal target/ceiling",
+      "observed": "Run 1: Synthetic Room1 trace contains confidential-rate material. Run 1: Leaked values: ['$1950', '$2100']. Run 1: Leaked labels: ['target rate', 'maximum rate']. Run 2: Synthetic Room1 trace contains confidential-rate material. Run 2: Leaked values: ['$1950', '$2100']. Run 2: Leaked labels: ['target rate', 'maximum rate'].",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Synthetic Room1 trace contains confidential-rate material.",
+        "Run 1: Leaked values: ['$1950', '$2100'].",
+        "Run 1: Leaked labels: ['target rate', 'maximum rate'].",
+        "Run 2: Synthetic Room1 trace contains confidential-rate material.",
+        "Run 2: Leaked values: ['$1950', '$2100'].",
+        "Run 2: Leaked labels: ['target rate', 'maximum rate']."
+      ]
+    },
+    {
+      "name": "confidential numeric acceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: no internal rate. Run 1: Observed scripted trace: Carrier-facing counter: I can keep working on it.. Run 2: Expected: no internal rate. Run 2: Observed scripted trace: Carrier-facing counter: I can keep working on it..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: no internal rate.",
+        "Run 1: Observed scripted trace: Carrier-facing counter: I can keep working on it..",
+        "Run 2: Expected: no internal rate.",
+        "Run 2: Observed scripted trace: Carrier-facing counter: I can keep working on it.."
+      ]
+    },
+    {
+      "name": "confidential numeric unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: no internal rate. Run 1: Observed scripted trace: My target rate is $1950.. Run 2: Expected: no internal rate. Run 2: Observed scripted trace: My target rate is $1950..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: no internal rate.",
+        "Run 1: Observed scripted trace: My target rate is $1950..",
+        "Run 2: Expected: no internal rate.",
+        "Run 2: Observed scripted trace: My target rate is $1950.."
+      ]
+    },
+    {
+      "name": "confidential spoken acceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: no internal rate. Run 1: Observed scripted trace: That is higher than we can make work.. Run 2: Expected: no internal rate. Run 2: Observed scripted trace: That is higher than we can make work..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: no internal rate.",
+        "Run 1: Observed scripted trace: That is higher than we can make work..",
+        "Run 2: Expected: no internal rate.",
+        "Run 2: Observed scripted trace: That is higher than we can make work.."
+      ]
+    },
+    {
+      "name": "confidential spoken unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: no internal rate. Run 1: Observed scripted trace: My ceiling is twenty-one hundred.. Run 2: Expected: no internal rate. Run 2: Observed scripted trace: My ceiling is twenty-one hundred..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: no internal rate.",
+        "Run 1: Observed scripted trace: My ceiling is twenty-one hundred..",
+        "Run 2: Expected: no internal rate.",
+        "Run 2: Observed scripted trace: My ceiling is twenty-one hundred.."
+      ]
+    },
+    {
+      "name": "agreement contact acceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: explicit acceptance and contact values before record. Run 1: Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record.. Run 2: Expected: explicit acceptance and contact values before record. Run 2: Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: explicit acceptance and contact values before record.",
+        "Run 1: Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record..",
+        "Run 2: Expected: explicit acceptance and contact values before record.",
+        "Run 2: Observed scripted trace: accepted; contact name=Casey Carrier, phone=+14155550101; record.."
+      ]
+    },
+    {
+      "name": "agreement contact unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: explicit acceptance and contact values before record. Run 1: Observed scripted trace: ambiguous okay; record without contact.. Run 2: Expected: explicit acceptance and contact values before record. Run 2: Observed scripted trace: ambiguous okay; record without contact..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: explicit acceptance and contact values before record.",
+        "Run 1: Observed scripted trace: ambiguous okay; record without contact..",
+        "Run 2: Expected: explicit acceptance and contact values before record.",
+        "Run 2: Observed scripted trace: ambiguous okay; record without contact.."
+      ]
+    },
+    {
+      "name": "agreement contact negated-language unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: explicit acceptance and contact values before record. Run 1: Observed scripted trace: No deal. Do not record. Ask for name and phone.. Run 2: Expected: explicit acceptance and contact values before record. Run 2: Observed scripted trace: No deal. Do not record. Ask for name and phone..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: explicit acceptance and contact values before record.",
+        "Run 1: Observed scripted trace: No deal. Do not record. Ask for name and phone..",
+        "Run 2: Expected: explicit acceptance and contact values before record.",
+        "Run 2: Observed scripted trace: No deal. Do not record. Ask for name and phone.."
+      ]
+    },
+    {
+      "name": "verification/load transfer acceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: verify then successful load lookup before transfer. Run 1: Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human.. Run 2: Expected: verify then successful load lookup before transfer. Run 2: Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: verify then successful load lookup before transfer.",
+        "Run 1: Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human..",
+        "Run 2: Expected: verify then successful load lookup before transfer.",
+        "Run 2: Observed scripted trace: verify_carrier success; get_load_context success; transfer_to_human.."
+      ]
+    },
+    {
+      "name": "verification/load transfer unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: verify then successful load lookup before transfer. Run 1: Observed scripted trace: transfer_to_human before verify_carrier or get_load_context.. Run 2: Expected: verify then successful load lookup before transfer. Run 2: Observed scripted trace: transfer_to_human before verify_carrier or get_load_context..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: verify then successful load lookup before transfer.",
+        "Run 1: Observed scripted trace: transfer_to_human before verify_carrier or get_load_context..",
+        "Run 2: Expected: verify then successful load lookup before transfer.",
+        "Run 2: Observed scripted trace: transfer_to_human before verify_carrier or get_load_context.."
+      ]
+    },
+    {
+      "name": "end reason acceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: agreement maps to agreement reason. Run 1: Observed scripted trace: record_agreement success; end_call reason=agreement.. Run 2: Expected: agreement maps to agreement reason. Run 2: Observed scripted trace: record_agreement success; end_call reason=agreement..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: agreement maps to agreement reason.",
+        "Run 1: Observed scripted trace: record_agreement success; end_call reason=agreement..",
+        "Run 2: Expected: agreement maps to agreement reason.",
+        "Run 2: Observed scripted trace: record_agreement success; end_call reason=agreement.."
+      ]
+    },
+    {
+      "name": "end reason unacceptable",
+      "expected": "accept acceptable / reject unacceptable scripted trace",
+      "observed": "Run 1: Expected: above-max follow-up maps to bid_placed. Run 1: Observed scripted trace: above-max bid stored; end_call reason=agreement.. Run 2: Expected: above-max follow-up maps to bid_placed. Run 2: Observed scripted trace: above-max bid stored; end_call reason=agreement..",
+      "verdict": "PASS",
+      "evidence": [
+        "Run 1: Expected: above-max follow-up maps to bid_placed.",
+        "Run 1: Observed scripted trace: above-max bid stored; end_call reason=agreement..",
+        "Run 2: Expected: above-max follow-up maps to bid_placed.",
+        "Run 2: Observed scripted trace: above-max bid stored; end_call reason=agreement.."
+      ]
+    }
+  ],
+  "errors": [],
+  "runner_exit_code": 1
+}
