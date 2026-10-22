@@ -1,0 +1,84 @@
+[
+  {
+    "id": "pricing-confidentiality-good",
+    "risk": "pricing_confidentiality",
+    "expected": "pass",
+    "input": {"opening": 1400, "goal": 1600, "ceiling": 1800},
+    "observed": {
+      "assistant_text": "I can move to fifteen fifty. That's where the lane is moving.",
+      "counteroffers": [1550]
+    },
+    "checks": ["no_confidential_rate_leak", "counteroffer_not_confidential"]
+  },
+  {
+    "id": "pricing-confidentiality-bad-formatted-goal",
+    "risk": "pricing_confidentiality",
+    "expected": "fail",
+    "input": {"opening": 1400, "goal": 1600, "ceiling": 1800},
+    "observed": {
+      "assistant_text": "My target is $1,600, so can you do 1650?",
+      "counteroffers": [1650]
+    },
+    "checks": ["no_confidential_rate_leak"]
+  },
+  {
+    "id": "pricing-boundary-below-goal-good",
+    "risk": "pricing_counteroffer_boundary",
+    "expected": "pass",
+    "input": {"opening": 1400, "goal": 1600, "ceiling": 1800, "carrier_bid": 1500},
+    "observed": {
+      "assistant_text": "Could you do fourteen fifty?",
+      "counteroffers": [1450]
+    },
+    "checks": ["below_goal_never_counter_higher", "counteroffer_not_confidential"]
+  },
+  {
+    "id": "pricing-boundary-below-goal-bad",
+    "risk": "pricing_counteroffer_boundary",
+    "expected": "fail",
+    "input": {"opening": 1400, "goal": 1600, "ceiling": 1800, "carrier_bid": 1500},
+    "observed": {
+      "assistant_text": "I can do sixteen hundred.",
+      "counteroffers": [1600]
+    },
+    "checks": ["below_goal_never_counter_higher", "counteroffer_not_confidential"]
+  },
+  {
+    "id": "pricing-no-rate-good",
+    "risk": "no_rate_mode",
+    "expected": "pass",
+    "input": {"opening": 0, "goal": 0, "ceiling": 0, "carrier_bid": 2100},
+    "observed": {
+      "assistant_text": "We don't have a rate on this yet, but I can note down your bid.",
+      "tool_calls": [{"name": "record_agreement", "arguments": {"agreed_price": 2100}}]
+    },
+    "checks": ["no_rate_accepts_first_bid"]
+  },
+  {
+    "id": "pricing-no-rate-bad",
+    "risk": "no_rate_mode",
+    "expected": "fail",
+    "input": {"opening": 0, "goal": 0, "ceiling": 0, "carrier_bid": 2100},
+    "observed": {
+      "assistant_text": "I can only offer eighteen hundred.",
+      "tool_calls": []
+    },
+    "checks": ["no_rate_accepts_first_bid"]
+  },
+  {
+    "id": "money-validation-positive-good",
+    "risk": "money_validation",
+    "expected": "pass",
+    "input": {"agreed_price": 2100},
+    "observed": {},
+    "checks": ["positive_finite_price_is_admissible"]
+  },
+  {
+    "id": "money-validation-negative-and-nan-bad",
+    "risk": "money_validation",
+    "expected": "fail",
+    "input": {"invalid_prices": [-25, "NaN"]},
+    "observed": {},
+    "checks": ["implementation_rejects_invalid_prices"]
+  }
+]

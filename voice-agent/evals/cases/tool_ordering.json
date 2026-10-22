@@ -1,0 +1,80 @@
+[
+  {
+    "id": "ordering-lookup-before-result-good",
+    "risk": "tool_ordering",
+    "expected": "pass",
+    "input": {"lookup_number": "123456"},
+    "observed": {
+      "events": [
+        {"type": "assistant_text", "content": "Let me check that."},
+        {"type": "tool_call", "name": "verify_carrier", "arguments": {"mc_number": "123456"}},
+        {"type": "tool_result", "name": "verify_carrier", "status": "success"},
+        {"type": "assistant_text", "content": "I found the carrier."}
+      ]
+    },
+    "checks": ["lookup_before_outcome"]
+  },
+  {
+    "id": "ordering-lookup-before-result-bad",
+    "risk": "tool_ordering",
+    "expected": "fail",
+    "input": {"lookup_number": "123456"},
+    "observed": {
+      "events": [
+        {"type": "assistant_text", "content": "I found the carrier."},
+        {"type": "tool_call", "name": "verify_carrier", "arguments": {"mc_number": "123456"}},
+        {"type": "tool_result", "name": "verify_carrier", "status": "success"}
+      ]
+    },
+    "checks": ["lookup_before_outcome"]
+  },
+  {
+    "id": "ordering-record-before-end-good",
+    "risk": "tool_ordering",
+    "expected": "pass",
+    "input": {},
+    "observed": {
+      "events": [
+        {"type": "tool_call", "name": "record_agreement", "arguments": {"agreed_price": 1550}},
+        {"type": "tool_result", "name": "record_agreement", "status": "success"},
+        {"type": "tool_call", "name": "end_call", "arguments": {"reason": "agreement"}}
+      ]
+    },
+    "checks": ["record_before_agreement_end"]
+  },
+  {
+    "id": "ordering-record-before-end-bad",
+    "risk": "tool_ordering",
+    "expected": "fail",
+    "input": {},
+    "observed": {
+      "events": [
+        {"type": "tool_call", "name": "end_call", "arguments": {"reason": "agreement"}},
+        {"type": "tool_call", "name": "record_agreement", "arguments": {"agreed_price": 1550}}
+      ]
+    },
+    "checks": ["record_before_agreement_end"]
+  },
+  {
+    "id": "ordering-contextless-transfer-good",
+    "risk": "transfer_safety",
+    "expected": "pass",
+    "input": {"context_load_uuid": null},
+    "observed": {
+      "transfer_result": {"status": "error", "message": "Cannot transfer yet — no load reference has been confirmed."},
+      "scheduled_transfer_count": 0
+    },
+    "checks": ["contextless_transfer_is_safe"]
+  },
+  {
+    "id": "ordering-contextless-transfer-bad",
+    "risk": "transfer_safety",
+    "expected": "fail",
+    "input": {"context_load_uuid": null},
+    "observed": {
+      "transfer_result": {"status": "transferring", "message": "Connecting you now."},
+      "scheduled_transfer_count": 1
+    },
+    "checks": ["contextless_transfer_is_safe"]
+  }
+]

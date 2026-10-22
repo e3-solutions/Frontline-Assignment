@@ -1,0 +1,53 @@
+[
+  {
+    "id": "mc-retry-third-not-found-good",
+    "risk": "mc_retry_safety",
+    "expected": "pass",
+    "input": {},
+    "observed": {"events": [
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_call", "name": "end_call", "arguments": {"reason": "mc_not_found"}}
+    ]},
+    "checks": ["third_not_found_ends_call"]
+  },
+  {
+    "id": "mc-retry-third-not-found-bad",
+    "risk": "mc_retry_safety",
+    "expected": "fail",
+    "input": {},
+    "observed": {"events": [
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"}
+    ]},
+    "checks": ["third_not_found_ends_call"]
+  },
+  {
+    "id": "mc-retry-service-errors-do-not-count-good",
+    "risk": "mc_retry_safety",
+    "expected": "pass",
+    "input": {},
+    "observed": {"events": [
+      {"type": "tool_result", "name": "verify_carrier", "status": "error"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "error"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"}
+    ]},
+    "checks": ["service_errors_do_not_count_as_not_found"]
+  },
+  {
+    "id": "mc-retry-service-errors-do-not-count-bad",
+    "risk": "mc_retry_safety",
+    "expected": "fail",
+    "input": {},
+    "observed": {"events": [
+      {"type": "tool_result", "name": "verify_carrier", "status": "error"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "not_found"},
+      {"type": "tool_result", "name": "verify_carrier", "status": "error"},
+      {"type": "tool_call", "name": "end_call", "arguments": {"reason": "mc_not_found"}}
+    ]},
+    "checks": ["service_errors_do_not_count_as_not_found"]
+  }
+]

@@ -1,0 +1,544 @@
+{
+  "generated_at": "2026-10-22T16:36:23.516589+00:00",
+  "cases": [
+    {
+      "id": "pricing-confidentiality-good",
+      "risk": "pricing_confidentiality",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "no_confidential_rate_leak",
+          "status": "PASS",
+          "reason": ""
+        },
+        {
+          "check": "counteroffer_not_confidential",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "assistant_text": "I can move to fifteen fifty. That's where the lane is moving.",
+        "counteroffers": [
+          1550
+        ]
+      }
+    },
+    {
+      "id": "pricing-confidentiality-bad-formatted-goal",
+      "risk": "pricing_confidentiality",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "no_confidential_rate_leak",
+          "status": "FAIL",
+          "reason": "carrier-facing text leaks confidential goal rate"
+        }
+      ],
+      "violations": [
+        "carrier-facing text leaks confidential goal rate"
+      ],
+      "agent_output": {
+        "assistant_text": "My target is $1,600, so can you do 1650?",
+        "counteroffers": [
+          1650
+        ]
+      }
+    },
+    {
+      "id": "pricing-boundary-below-goal-good",
+      "risk": "pricing_counteroffer_boundary",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "below_goal_never_counter_higher",
+          "status": "PASS",
+          "reason": ""
+        },
+        {
+          "check": "counteroffer_not_confidential",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "assistant_text": "Could you do fourteen fifty?",
+        "counteroffers": [
+          1450
+        ]
+      }
+    },
+    {
+      "id": "pricing-boundary-below-goal-bad",
+      "risk": "pricing_counteroffer_boundary",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "below_goal_never_counter_higher",
+          "status": "FAIL",
+          "reason": "below-goal bid 1500 was countered higher: [1600]"
+        },
+        {
+          "check": "counteroffer_not_confidential",
+          "status": "FAIL",
+          "reason": "counteroffer equals confidential rate: 1600"
+        }
+      ],
+      "violations": [
+        "below-goal bid 1500 was countered higher: [1600]",
+        "counteroffer equals confidential rate: 1600"
+      ],
+      "agent_output": {
+        "assistant_text": "I can do sixteen hundred.",
+        "counteroffers": [
+          1600
+        ]
+      }
+    },
+    {
+      "id": "pricing-no-rate-good",
+      "risk": "no_rate_mode",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "no_rate_accepts_first_bid",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "assistant_text": "We don't have a rate on this yet, but I can note down your bid.",
+        "tool_calls": [
+          {
+            "name": "record_agreement",
+            "arguments": {
+              "agreed_price": 2100
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pricing-no-rate-bad",
+      "risk": "no_rate_mode",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "no_rate_accepts_first_bid",
+          "status": "FAIL",
+          "reason": "no-rate mode did not record first carrier bid 2100"
+        }
+      ],
+      "violations": [
+        "no-rate mode did not record first carrier bid 2100"
+      ],
+      "agent_output": {
+        "assistant_text": "I can only offer eighteen hundred.",
+        "tool_calls": []
+      }
+    },
+    {
+      "id": "money-validation-positive-good",
+      "risk": "money_validation",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "positive_finite_price_is_admissible",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {}
+    },
+    {
+      "id": "money-validation-negative-and-nan-bad",
+      "risk": "money_validation",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "implementation_rejects_invalid_prices",
+          "status": "FAIL",
+          "reason": "finding: record_agreement has no explicit finite positive-price validation; negative or NaN values can pass float()"
+        }
+      ],
+      "violations": [
+        "finding: record_agreement has no explicit finite positive-price validation; negative or NaN values can pass float()"
+      ],
+      "agent_output": {}
+    },
+    {
+      "id": "ordering-lookup-before-result-good",
+      "risk": "tool_ordering",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "lookup_before_outcome",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "events": [
+          {
+            "type": "assistant_text",
+            "content": "Let me check that."
+          },
+          {
+            "type": "tool_call",
+            "name": "verify_carrier",
+            "arguments": {
+              "mc_number": "123456"
+            }
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "success"
+          },
+          {
+            "type": "assistant_text",
+            "content": "I found the carrier."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordering-lookup-before-result-bad",
+      "risk": "tool_ordering",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "lookup_before_outcome",
+          "status": "FAIL",
+          "reason": "lookup outcome was stated before its tool result"
+        }
+      ],
+      "violations": [
+        "lookup outcome was stated before its tool result"
+      ],
+      "agent_output": {
+        "events": [
+          {
+            "type": "assistant_text",
+            "content": "I found the carrier."
+          },
+          {
+            "type": "tool_call",
+            "name": "verify_carrier",
+            "arguments": {
+              "mc_number": "123456"
+            }
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "success"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordering-record-before-end-good",
+      "risk": "tool_ordering",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "record_before_agreement_end",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_call",
+            "name": "record_agreement",
+            "arguments": {
+              "agreed_price": 1550
+            }
+          },
+          {
+            "type": "tool_result",
+            "name": "record_agreement",
+            "status": "success"
+          },
+          {
+            "type": "tool_call",
+            "name": "end_call",
+            "arguments": {
+              "reason": "agreement"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordering-record-before-end-bad",
+      "risk": "tool_ordering",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "record_before_agreement_end",
+          "status": "FAIL",
+          "reason": "end_call(reason=agreement) occurred before record_agreement"
+        }
+      ],
+      "violations": [
+        "end_call(reason=agreement) occurred before record_agreement"
+      ],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_call",
+            "name": "end_call",
+            "arguments": {
+              "reason": "agreement"
+            }
+          },
+          {
+            "type": "tool_call",
+            "name": "record_agreement",
+            "arguments": {
+              "agreed_price": 1550
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordering-contextless-transfer-good",
+      "risk": "transfer_safety",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "contextless_transfer_is_safe",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "transfer_result": {
+          "status": "error",
+          "message": "Cannot transfer yet \u2014 no load reference has been confirmed."
+        },
+        "scheduled_transfer_count": 0
+      }
+    },
+    {
+      "id": "ordering-contextless-transfer-bad",
+      "risk": "transfer_safety",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "contextless_transfer_is_safe",
+          "status": "FAIL",
+          "reason": "transfer without context.load_uuid was not rejected"
+        }
+      ],
+      "violations": [
+        "transfer without context.load_uuid was not rejected"
+      ],
+      "agent_output": {
+        "transfer_result": {
+          "status": "transferring",
+          "message": "Connecting you now."
+        },
+        "scheduled_transfer_count": 1
+      }
+    },
+    {
+      "id": "mc-retry-third-not-found-good",
+      "risk": "mc_retry_safety",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "third_not_found_ends_call",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_call",
+            "name": "end_call",
+            "arguments": {
+              "reason": "mc_not_found"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "mc-retry-third-not-found-bad",
+      "risk": "mc_retry_safety",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "third_not_found_ends_call",
+          "status": "FAIL",
+          "reason": "third verify_carrier not_found did not end with mc_not_found"
+        }
+      ],
+      "violations": [
+        "third verify_carrier not_found did not end with mc_not_found"
+      ],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mc-retry-service-errors-do-not-count-good",
+      "risk": "mc_retry_safety",
+      "expected": "pass",
+      "actual": "pass",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "service_errors_do_not_count_as_not_found",
+          "status": "PASS",
+          "reason": ""
+        }
+      ],
+      "violations": [],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "error"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "error"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mc-retry-service-errors-do-not-count-bad",
+      "risk": "mc_retry_safety",
+      "expected": "fail",
+      "actual": "fail",
+      "status": "PASS",
+      "check_results": [
+        {
+          "check": "service_errors_do_not_count_as_not_found",
+          "status": "FAIL",
+          "reason": "service errors were treated as not_found retry strikes"
+        }
+      ],
+      "violations": [
+        "service errors were treated as not_found retry strikes"
+      ],
+      "agent_output": {
+        "events": [
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "error"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "not_found"
+          },
+          {
+            "type": "tool_result",
+            "name": "verify_carrier",
+            "status": "error"
+          },
+          {
+            "type": "tool_call",
+            "name": "end_call",
+            "arguments": {
+              "reason": "mc_not_found"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
