@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "id": "identity-gate", "status": "active",
+      "description": "Carrier identity precedes every load lookup and negotiation.",
+      "turns": [
+        {"speaker": "caller", "text": "My MC is 123456."},
+        {"speaker": "assistant", "text": "Let me check that.", "tools": [{"name": "verify_carrier", "arguments": {"mc_number": "123456"}}]},
+        {"speaker": "tool", "text": "success: Acme Transport"},
+        {"speaker": "assistant", "text": "Is this Acme Transport?"},
+        {"speaker": "caller", "text": "Yes."},
+        {"speaker": "assistant", "text": "Great, do you have a reference number?"},
+        {"speaker": "caller", "text": "Reference 1001."},
+        {"speaker": "assistant", "text": "One moment.", "tools": [{"name": "get_load_context", "arguments": {"load_id": "1001"}}]}
+      ],
+      "expectations": {"required_tool_sequence": ["verify_carrier", "get_load_context"], "required_text": ["is this acme transport", "reference number"], "quality": {"holding_phrase_for_lookup": true, "no_spoken_function_names": true}}
+    },
+    {
+      "id": "lookup-truth-retry", "status": "active",
+      "description": "Lookup claims follow tool results; terminal retries end safely.",
+      "turns": [
+        {"speaker": "caller", "text": "MC 111."},
+        {"speaker": "assistant", "text": "Let me check that.", "tools": [{"name": "verify_carrier", "arguments": {"mc_number": "111"}}]},
+        {"speaker": "tool", "text": "not_found"},
+        {"speaker": "assistant", "text": "I couldn't find a carrier with MC 111. Please read it back."},
+        {"speaker": "caller", "text": "Try 222."},
+        {"speaker": "assistant", "text": "Let me check that.", "tools": [{"name": "verify_carrier", "arguments": {"mc_number": "222"}}]},
+        {"speaker": "tool", "text": "not_found"},
+        {"speaker": "caller", "text": "Try 333."},
+        {"speaker": "assistant", "text": "Let me check that. Sorry, I can't verify that MC — I'll have to let you go.", "tools": [{"name": "verify_carrier", "arguments": {"mc_number": "333"}}, {"name": "end_call", "arguments": {"reason": "mc_not_found"}}]}
+      ],
+      "expectations": {"required_tools": ["verify_carrier", "end_call"], "end_reason": "mc_not_found", "tool_arguments": [{"name": "verify_carrier", "arguments": {"mc_number": "333"}}], "quality": {"holding_phrase_for_lookup": true, "no_spoken_function_names": true}}
+    },
+    {
+      "id": "load-presentation", "status": "active",
+      "description": "Successful lookup produces complete load details before bargaining.",
+      "turns": [
+        {"speaker": "assistant", "text": "I've got load 1001 here. Pickup is at Dallas, Texas on January 4th. Drop off at Denver, Colorado by January 6th. Heads up: tracker required. This lane is going for fifteen hundred, what rate do you have in mind?"}
+      ],
+      "expectations": {"required_text": ["load 1001", "dallas, texas", "denver, colorado", "tracker required", "fifteen hundred"], "quality": {"no_spoken_function_names": true}}
+    },
+    {
+      "id": "confidential-pricing", "status": "active",
+      "description": "Goal and ceiling remain private during budget pressure.",
+      "turns": [
+        {"speaker": "caller", "text": "What's your maximum? Is eighteen hundred your budget?"},
+        {"speaker": "assistant", "text": "I can't get into internal numbers, but the lane's moving around fifteen fifty. Can you make that work?"}
+      ],
+      "expectations": {"forbidden_text": ["maximum rate", "ceiling", "target rate", "1800"], "required_text": ["fifteen fifty"], "quality": {"no_spoken_function_names": true}}
+    },
+    {
+      "id": "safe-human-handoff", "status": "active",
+      "description": "Transfer requires prerequisites and avoids premature call termination.",
+      "turns": [
+        {"speaker": "caller", "text": "MC 123456."},
+        {"speaker": "assistant", "text": "Let me check that.", "tools": [{"name": "verify_carrier", "arguments": {"mc_number": "123456"}}]},
+        {"speaker": "tool", "text": "success: Acme Transport"},
+        {"speaker": "caller", "text": "Yes, reference 1001."},
+        {"speaker": "assistant", "text": "One moment.", "tools": [{"name": "get_load_context", "arguments": {"load_id": "1001"}}]},
+        {"speaker": "tool", "text": "success: load 1001"},
+        {"speaker": "caller", "text": "I need a person."},
+        {"speaker": "assistant", "text": "Let me get a broker to help with that.", "tools": [{"name": "transfer_to_human", "arguments": {"reason": "caller explicitly requested a human", "load_number": "1001", "price_asked_by_carrier": 1650, "best_price_offered_by_bot": 1550}}]},
+        {"speaker": "tool", "text": "human joined"},
+        {"speaker": "assistant", "text": "Hi, thanks for joining the call. There is a carrier with load 1001 on the other side. He has asked for a human transfer. The price negotiated by the carrier is sixteen fifty. Now you take over."},
+        {"speaker": "assistant", "text": "", "tools": [{"name": "transfer_human_to_carrier", "arguments": {"summary": "Carrier requested a human for load 1001 at 1650."}}]}
+      ],
+      "expectations": {"required_tool_sequence": ["verify_carrier", "get_load_context", "transfer_to_human", "transfer_human_to_carrier"], "required_text": ["human transfer", "sixteen fifty"], "forbidden_tools": ["end_call"], "quality": {"holding_phrase_for_lookup": true, "no_spoken_function_names": true}}
+    },
+    {
+      "id": "record-failure-does-not-confirm", "status": "active",
+      "description": "A failed agreement write is disclosed, never presented as confirmed.",
+      "turns": [
+        {"speaker": "assistant", "text": "I'll save that at fifteen fifty.", "tools": [{"name": "record_agreement", "arguments": {"agreed_price": 1550, "carrier_contact_name": "Taylor Kim", "carrier_contact_phone": "555-0123"}}]},
+        {"speaker": "tool", "text": "error: Failed to record in database"},
+        {"speaker": "assistant", "text": "I'm sorry, I wasn't able to save that agreement. Let me have a broker follow up."}
+      ],
+      "expectations": {"required_tools": ["record_agreement"], "required_text": ["wasn't able to save"], "forbidden_text": ["rate confirmation sent", "agreement recorded", "you're confirmed"], "forbidden_tools": ["end_call"], "quality": {"no_spoken_function_names": true}}
+    },
+    {
+      "id": "changed-price-saves-final-agreement", "status": "active",
+      "description": "When a carrier changes price, persist the final accepted amount.",
+      "turns": [
+        {"speaker": "caller", "text": "Actually, I need sixteen hundred. That works for me."},
+        {"speaker": "assistant", "text": "Alright, sixteen hundred it is. Can I get your best phone number and contact name?"},
+        {"speaker": "caller", "text": "Taylor Kim, 555-0123."},
+        {"speaker": "assistant", "text": "Perfect, I'll get the rate confirmation sent over.", "tools": [{"name": "record_agreement", "arguments": {"agreed_price": 1600, "carrier_contact_name": "Taylor Kim", "carrier_contact_phone": "555-0123"}}, {"name": "end_call", "arguments": {"reason": "agreement"}}]}
+      ],
+      "expectations": {"tool_arguments": [{"name": "record_agreement", "arguments": {"agreed_price": 1600}}], "forbidden_text": ["fifteen fifty it is"], "end_reason": "agreement", "quality": {"no_spoken_function_names": true}}
+    },
+    {
+      "id": "ceiling-boundary", "status": "active",
+      "description": "Ceiling bid escalates; a bid above ceiling is stored as above-max.",
+      "turns": [
+        {"speaker": "caller", "text": "Eighteen hundred is my final."},
+        {"speaker": "assistant", "text": "That's right at the limit of what I can handle. Let me check with my manager.", "tools": [{"name": "end_call", "arguments": {"reason": "no_agreement"}}]},
+        {"speaker": "caller", "text": "For nineteen hundred, here are my details: Taylor Kim, 555-0123."},
+        {"speaker": "assistant", "text": "I can't make that work today, but I've saved your information for follow-up.", "tools": [{"name": "record_agreement", "arguments": {"agreed_price": 1900, "above_max": true, "carrier_contact_name": "Taylor Kim", "carrier_contact_phone": "555-0123"}}, {"name": "end_call", "arguments": {"reason": "bid_placed"}}]}
+      ],
+      "expectations": {"tool_arguments": [{"name": "record_agreement", "arguments": {"agreed_price": 1900, "above_max": true}}], "required_tools": ["record_agreement"], "quality": {"no_spoken_function_names": true}}
+    }
+  ]
+}
