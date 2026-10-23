@@ -1,0 +1,21 @@
+[
+  {
+    "id": "opening-clean",
+    "reference_transcript": "Hello, I'd like to move some freight.",
+    "observed_transcript": "Hello, I'd like to move some freight."
+  },
+  {
+    "id": "mc-correct",
+    "reference_transcript": "My MC number is 123456.",
+    "observed_transcript": "My MC number is 123456.",
+    "expected_mc": "123456",
+    "observed_mc": "MC-123456"
+  },
+  {
+    "id": "mc-wrong-digit",
+    "reference_transcript": "My MC number is 765432.",
+    "observed_transcript": "My MC number is 7654321.",
+    "expected_mc": "765432",
+    "observed_mc": "7654321"
+  }
+]
